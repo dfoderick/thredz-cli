@@ -1,0 +1,33 @@
+{
+  "name": "thredz-cli",
+  "version": "1.0.0",
+  "description": "console app for thredz",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfoderick/thredz-cli.git"
+  },
+  "keywords": [
+    "thredz",
+    "client"
+  ],
+  "author": "Dave Foderick",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfoderick/thredz-cli/issues"
+  },
+  "homepage": "https://github.com/dfoderick/thredz-cli#readme",
+  "dependencies": {
+    "node-fetch": "^3.2.5",
+    "openspv": "^3.0.29"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.41",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
+  }
+}
