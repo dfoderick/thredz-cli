@@ -6,6 +6,7 @@ export class Wallet {
     constructor() {
         this.indexer = new Indexer();
         this.key = null;
+        this.user = '';
         this.utxos = [];
     }
     get Address() { var _a; return (_a = this.key) === null || _a === void 0 ? void 0 : _a.Address; }
@@ -18,15 +19,22 @@ export class Wallet {
         }, 0);
         return bal;
     }
+    writeWallet(fileName) {
+        const useFile = fileName || constants.WALLET_FILE_NAME;
+        if (!this.key)
+            throw new Error(`assign a key before saving wallet file`);
+        fs.writeFileSync(useFile, JSON.stringify({
+            key: this.key.toString(),
+            user: this.user
+        }));
+    }
     static fromFile(fileName) {
         const useFile = fileName || constants.WALLET_FILE_NAME;
         const w = new Wallet();
         if (!fs.existsSync(useFile)) {
             w.key = KeyPair.fromRandom();
-            fs.writeFileSync(useFile, JSON.stringify({
-                key: w.key.toString()
-            }));
-            console.info(`Created file ${useFile} with key`);
+            w.writeWallet(useFile);
+            console.info(`Created file ${useFile} with key for user ${w.user}`);
         }
         else {
             const swallet = fs.readFileSync(useFile);
@@ -42,6 +50,7 @@ export class Wallet {
         const jwallet = JSON.parse(walletContents);
         const setkey = KeyPair.fromString(jwallet.key);
         this.key = setkey;
+        this.user = jwallet.user;
         return this;
     }
 }

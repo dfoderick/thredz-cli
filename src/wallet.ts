@@ -6,6 +6,7 @@ import { Indexer } from "./indexer.js";
 export class Wallet {
     indexer: Indexer = new Indexer()
     key: KeyPair | null = null
+    user: string = ''
     utxos: any = []
 
     get Address() { return this.key?.Address }
@@ -20,15 +21,22 @@ export class Wallet {
         return bal
     }
 
+    writeWallet(fileName?: string) {
+        const useFile = fileName || constants.WALLET_FILE_NAME
+        if (!this.key) throw new Error(`assign a key before saving wallet file`)
+        fs.writeFileSync(useFile, JSON.stringify({
+            key: this.key.toString(),
+            user: this.user
+        }))
+    }
+
     static fromFile(fileName?:string) : Wallet {
         const useFile = fileName || constants.WALLET_FILE_NAME
         const w = new Wallet()
         if (!fs.existsSync(useFile)) {
             w.key = KeyPair.fromRandom();
-            fs.writeFileSync(useFile, JSON.stringify({
-                key: w.key.toString()
-            }))
-            console.info(`Created file ${useFile} with key`)
+            w.writeWallet(useFile)
+            console.info(`Created file ${useFile} with key for user ${w.user}`)
         } else {
             const swallet = fs.readFileSync(useFile)
             w.load(swallet.toString())
@@ -44,6 +52,7 @@ export class Wallet {
         const jwallet = JSON.parse(walletContents)
         const setkey = KeyPair.fromString(jwallet.key)
         this.key = setkey
+        this.user = jwallet.user
         return this
     }
 }
