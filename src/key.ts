@@ -3,6 +3,10 @@ import OpenSPV from 'openspv'
 export class KeyPair {
     key: typeof OpenSPV.Bip32
 
+    get PublicKey() { 
+        return this.key?.toPublic().pubKey
+    }
+
     get Address() { 
         const address = new OpenSPV.Address()
         //pubKey.compressed = false

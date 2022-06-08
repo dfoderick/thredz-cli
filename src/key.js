@@ -1,5 +1,9 @@
 import OpenSPV from 'openspv';
 export class KeyPair {
+    get PublicKey() {
+        var _a;
+        return (_a = this.key) === null || _a === void 0 ? void 0 : _a.toPublic().pubKey;
+    }
     get Address() {
         var _a;
         const address = new OpenSPV.Address();

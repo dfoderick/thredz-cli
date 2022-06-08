@@ -10,6 +10,7 @@ export class Wallet {
     utxos: any = []
 
     get Address() { return this.key?.Address }
+    get PublicKey() { return this.key?.PublicKey }
 
     async getBalance() {
         const utxo = await this.indexer.getUtxos(this.Address)

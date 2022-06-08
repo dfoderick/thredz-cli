@@ -24,10 +24,29 @@ export class Folder {
     }
     dumpFileContents(fileName) {
         const contents = this.getfileContents(fileName);
-        console.log(contents.toString());
+        // console.log(`it`, contents[0])
+        if (contents[0] == 91) {
+            const jcontents = JSON.parse(contents.toString());
+            console.log(jcontents);
+        }
+        else {
+            console.log(contents.toString());
+        }
     }
     commit(content) {
-        fs.appendFileSync(this.getcommitFileName(), content.toString());
+        let jcurrent = [];
+        if (this.isPendingCommit()) {
+            const current = this.getfileContents(this.getcommitFileName());
+            jcurrent = JSON.parse(current.toString());
+        }
+        // commit file will be an array of json objects
+        jcurrent.push({ hex: content.toString() });
+        //fs.appendFileSync(this.getcommitFileName(), content.toString())
+        fs.writeFileSync(this.getcommitFileName(), JSON.stringify(jcurrent));
+    }
+    isPendingCommit() {
+        const commits = this.getcommitFileName();
+        return fs.existsSync(commits);
     }
     checkCommitsPending() {
         const commits = this.getcommitFileName();

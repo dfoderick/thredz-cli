@@ -48,16 +48,18 @@ switch (arg2) {
         folder.checkCommitsPending()
         break;
     case 'commit':
-        console.log(`TODO commit changes`)
+        if (folder.isPendingCommit()) {
+            console.log(`TODO commit changes`)
+        } else console.log(`No pending commits`)
         break;
     case 'help':
         console.log(`
         thredz init (initialize system)
         thredz user <user> (create user)
-        thredz mkdir <dir> (create folder)
-        thredz upload (upload a file)
+        TODO thredz mkdir <dir> (create folder)
+        TODO thredz upload (upload a file)
         thredz status (show pending edits)
-        thredz commit (save changes to metanet)
+        TODO thredz commit (save changes to metanet)
         thredz help (show help)`)
         break;
     case undefined:

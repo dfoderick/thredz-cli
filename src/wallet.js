@@ -10,6 +10,7 @@ export class Wallet {
         this.utxos = [];
     }
     get Address() { var _a; return (_a = this.key) === null || _a === void 0 ? void 0 : _a.Address; }
+    get PublicKey() { var _a; return (_a = this.key) === null || _a === void 0 ? void 0 : _a.PublicKey; }
     async getBalance() {
         const utxo = await this.indexer.getUtxos(this.Address);
         this.utxos = utxo;
