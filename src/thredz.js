@@ -7,10 +7,11 @@ import { Folder } from './folder.js';
     let arg3;
     let wallet = new Wallet();
     wallet = wallet.load();
-    const uploader = new Uploader(wallet);
     const folder = new Folder();
+    folder.user = wallet.user;
+    const uploader = new Uploader(wallet, folder);
     console.log(`Current Directory ${folder.cwd}`);
-    console.log(`Current User ${wallet.user} at ${folder.getuserFolder(wallet.user)}`);
+    console.log(`Current User ${wallet.user} at ${folder.getuserFolder()}`);
     const nameForDomain = `User Folder`;
     switch (arg2) {
         case 'init':
@@ -43,6 +44,7 @@ import { Folder } from './folder.js';
             arg3 = process.argv[3];
             const result = uploader.prepare(arg3);
             console.log(`UPLOAD RESULT`, result);
+            folder.checkCommitsPending();
             break;
         case 'status':
             folder.checkCommitsPending();

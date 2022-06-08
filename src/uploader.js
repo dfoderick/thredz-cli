@@ -1,7 +1,8 @@
 import * as fs from "fs";
 export class Uploader {
-    constructor(wallet) {
+    constructor(wallet, folder) {
         this.wallet = wallet;
+        this.folder = folder;
     }
     prepare(fileName) {
         if (!fs.existsSync(fileName))
@@ -12,6 +13,8 @@ export class Uploader {
     }
     makeTransaction(content) {
         console.log(`content`, content.length);
+        //this.folder.commit(content)
+        this.folder.commit(Buffer.from(`TODO: this will be a transation\n`));
         return { build: `TODO build transaction` };
     }
 }
