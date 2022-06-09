@@ -52,6 +52,12 @@ switch (arg2) {
             console.log(`TODO commit changes`)
         } else console.log(`No pending commits`)
         break;
+    case 'cancel':
+        if (folder.isPendingCommit()) {
+            folder.cancel()
+            folder.checkCommitsPending()
+        } else console.log(`No pending commits`)
+        break;
     case 'help':
         console.log(`
         thredz init (initialize system)
@@ -60,6 +66,7 @@ switch (arg2) {
         TODO thredz upload (upload a file)
         thredz status (show pending edits)
         TODO thredz commit (save changes to metanet)
+        TODO thredz cancel (delete pending changes)
         thredz help (show help)`)
         break;
     case undefined:

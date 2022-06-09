@@ -33,6 +33,12 @@ export class Folder {
             console.log(contents.toString());
         }
     }
+    cancel() {
+        if (this.isPendingCommit()) {
+            fs.rmSync(this.getcommitFileName());
+            console.log(`commit file has been deleted\n`);
+        }
+    }
     commit(content) {
         let jcurrent = [];
         if (this.isPendingCommit()) {

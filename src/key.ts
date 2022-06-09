@@ -23,5 +23,11 @@ export class KeyPair {
         k.key = OpenSPV.Bip32.fromString(keyString);
         return k
     }
+
+    //TODO: derive
+    deriveChild(childPath: string) {
+        return this.key
+    }
+
     toString() { return this.key?.toString()}
 }

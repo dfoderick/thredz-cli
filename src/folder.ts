@@ -30,6 +30,12 @@ export class Folder {
             console.log(contents.toString())
         }
     }
+    cancel() {
+        if (this.isPendingCommit()){
+            fs.rmSync(this.getcommitFileName())
+            console.log(`commit file has been deleted`)
+        }
+    }
     commit(content: Buffer) {
         let jcurrent = []
         if (this.isPendingCommit()){
