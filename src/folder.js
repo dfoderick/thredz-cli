@@ -36,7 +36,7 @@ export class Folder {
     cancel() {
         if (this.isPendingCommit()) {
             fs.rmSync(this.getcommitFileName());
-            console.log(`commit file has been deleted\n`);
+            console.log(`commit file has been deleted`);
         }
     }
     commit(content) {

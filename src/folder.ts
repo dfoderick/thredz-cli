@@ -36,7 +36,7 @@ export class Folder {
             console.log(`commit file has been deleted`)
         }
     }
-    commit(content: Buffer) {
+    commit(content: any) {
         let jcurrent = []
         if (this.isPendingCommit()){
             const current = this.getfileContents(this.getcommitFileName())

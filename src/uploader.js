@@ -30,9 +30,17 @@ export class Uploader {
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
             throw new Error(`FILE SIZE TOO BIG. USE BCAT`);
         }
-        //const script = this.metaScript(null, node)
-        //this.folder.commit(content)
-        this.folder.commit(Buffer.from(`TODO: this will be a transation\n`));
+        let build = ``;
+        const test = true;
+        if (test) {
+            const script = this.metaScript(null, node);
+            build = script.toString();
+            if (script)
+                this.folder.commit(script);
+        }
+        else {
+            this.folder.commit(Buffer.from(`TODO: this will be a transation\n`));
+        }
         return { build: `TODO build transaction` };
     }
     // build script for child node
@@ -59,9 +67,8 @@ export class Uploader {
     metaPreamble(parent, child) {
         var _a, _b;
         const derivedKey = (_b = (_a = this.wallet) === null || _a === void 0 ? void 0 : _a.key) === null || _b === void 0 ? void 0 : _b.deriveChild(child.keyPath);
-        return ['meta',
-            derivedKey.publicKey.toAddress().toString(),
-            parent === null ? 'NULL' : parent.transactionId];
+        console.log(`DERIVED`, derivedKey);
+        return [constants.META_PROTOCOL, derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address.toString(), parent === null ? 'NULL' : parent.transactionId];
     }
     asHex(arr) {
         return arr.map((a) => {

@@ -33,10 +33,15 @@ export class Uploader {
             throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
         }
 
-        //const script = this.metaScript(null, node)
-
-        //this.folder.commit(content)
-        this.folder.commit(Buffer.from(`TODO: this will be a transation\n`))
+        let build = ``
+        const test = true
+        if (test) {
+            const script = this.metaScript(null, node)
+            build = script.toString()
+            if (script) this.folder.commit(script)
+        } else {
+            this.folder.commit(Buffer.from(`TODO: this will be a transation\n`))
+        }
         return {build: `TODO build transaction`}
     }
 
@@ -67,8 +72,9 @@ export class Uploader {
     }
     metaPreamble(parent: MetaNode|null, child: MetaNode): any {
         const derivedKey = this.wallet?.key?.deriveChild(child.keyPath)
-        return ['meta', 
-        derivedKey.publicKey.toAddress().toString(),
+        console.log(`DERIVED`,derivedKey)
+        return [constants.META_PROTOCOL, 
+        derivedKey?.Address.toString(),
         parent === null ? 'NULL' : parent.transactionId]
     }
     asHex(arr:any[]) {

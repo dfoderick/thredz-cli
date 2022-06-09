@@ -76,8 +76,8 @@ import { Folder } from './folder.js';
         thredz help (show help)`);
             break;
         case undefined:
-            console.log(`missing argument`, arg1);
+            console.log(`missing argument`, arg2);
         default:
-            console.log(`UNKNOWN COMMAND`, arg2);
+            console.log(`UNKNOWN COMMAND`, arg1, arg2, arg3);
     }
 })();

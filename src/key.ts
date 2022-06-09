@@ -24,9 +24,12 @@ export class KeyPair {
         return k
     }
 
-    //TODO: derive
-    deriveChild(childPath: string) {
-        return this.key
+    //TODO: derived should be a new class?
+    //for now, return a KeyPair with new key
+    deriveChild(path: string) {
+        const derived = new KeyPair()
+        derived.key = this.key.derive(path)
+        return derived
     }
 
     toString() { return this.key?.toString()}
