@@ -42,11 +42,11 @@ export class Uploader {
         } else {
             this.folder.commit(Buffer.from(`TODO: this will be a transation\n`))
         }
-        return {build: `TODO build transaction`}
+        return {build: build}
     }
 
-    bProtocolTag = ''
-    dipProtocolTag = ''
+    bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
+    dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
     algorithm = 'SHA512'
 
     // build script for child node
@@ -54,6 +54,12 @@ export class Uploader {
         const digest = OpenSPV.Hash.sha512(child.content)
         const encoding = ' '
         const mediaType = ' '
+        //   OP_RETURN
+        //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
+        //   [Data]
+        //   [Media Type]
+        //   [Encoding]
+        //   [Filename]
         const opr: any[] = [
             this.metaPreamble(parent, child),
             this.bProtocolTag,
@@ -61,18 +67,18 @@ export class Uploader {
             mediaType,
             encoding,
             child.name,
-            '|',
-            this.dipProtocolTag,
-            this.algorithm,
-            digest,
-            0x01,
-            0x05
+            // '|',
+            // this.dipProtocolTag,
+            // this.algorithm,
+            // digest,
+            // 0x01,
+            // 0x05
         ]
         return ['OP_RETURN', this.asHex(opr)]
     }
     metaPreamble(parent: MetaNode|null, child: MetaNode): any {
         const derivedKey = this.wallet?.key?.deriveChild(child.keyPath)
-        console.log(`DERIVED`,derivedKey)
+        //console.log(`DERIVED`,derivedKey)
         return [constants.META_PROTOCOL, 
         derivedKey?.Address.toString(),
         parent === null ? 'NULL' : parent.transactionId]
@@ -80,7 +86,10 @@ export class Uploader {
     asHex(arr:any[]) {
         return arr.map((a: any) => {
             if (a instanceof Buffer) return a.toString('hex')
-            //if (typeof a === 'number')
+            if (typeof a === 'number') {
+                if (a < 16 ) return a.toString(16).padStart(2,'0')
+                throw Error(`FIX ASHEX ${a}`)
+            }
             return Buffer.from(a.toString('hex'))
         })
     }
