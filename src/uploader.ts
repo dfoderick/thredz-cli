@@ -4,6 +4,10 @@ import OpenSPV from 'openspv';
 import * as fs from "fs";
 import { MetaNode } from "./meta.js";
 import constants from "./constants.js";
+import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
+import {Wallet as msWallet} from 'moneystream-wallet'
+import { WalletStorage } from "./walletstorage.js";
+import Long from "long";
 
 export class Uploader {
     private wallet:Wallet
@@ -12,19 +16,19 @@ export class Uploader {
         this.wallet = wallet
         this.folder = folder
     }
-    prepare(fileName: string) {
+    async prepare(fileName: string) {
         if (!fs.existsSync(fileName)) return {success: false, result:`File does not exists`}
         const content = fs.readFileSync(fileName)
-        const build = this.makeTransaction(fileName, content)
+        const build = await this.makeTransaction(fileName, content)
         return {success: false, result: build}
     }
 
-    //TODO
-    makeTransaction(fileName:string, content: Buffer) {
+    //TODO:
+    async makeTransaction(fileName:string, content: Buffer) {
         console.log(`content`, content.length)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
-        const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKey)
+        const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
         const node: MetaNode = new MetaNode()
         node.name = fileName
@@ -37,12 +41,66 @@ export class Uploader {
         const test = true
         if (test) {
             const script = this.metaScript(null, node)
-            build = script.toString()
-            if (script) this.folder.commit(script)
+            node.script = script
+            const metanetTransaction = await this.createTransaction(node)
+            build = metanetTransaction.toString()
+            if (script) this.folder.commit(build)
         } else {
             this.folder.commit(Buffer.from(`TODO: this will be a transation\n`))
         }
         return {build: build}
+    }
+
+    async testSpend(payTo: string) {
+        const indexService = new IndexingService()
+        const msw: msWallet = new msWallet(new WalletStorage(), indexService)
+        const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
+        //const wif = this.wallet.PrivateKeyLegacy?.toWif()
+        console.log(`wif`, wif)
+        msw.loadWallet(wif)
+        console.log(msw._keypair.toAddress().toString())
+        //await msw.tryLoadWalletUtxos()
+        const utxos = await msw.loadUnspent()
+        //console.log(msw._selectedUtxos)
+        console.log(`balance`,msw.balance)
+        const fee = 10
+        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance-fee),undefined,payTo)
+        console.log(`build`, buildResult)
+        //const broadcastResult = await indexService.broadcastRaw(buildResult.hex)
+        //console.log(`broadcast`,broadcastResult)
+    }
+
+    getMoneyStreamWallet() {
+        const indexService = new IndexingService()
+        const msw: msWallet = new msWallet(new WalletStorage(), indexService)
+        const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
+        msw.loadWallet(wif)
+        msw.logDetails()
+        return msw
+    }
+
+    //TODO: create the transaction
+    async createTransaction(node: MetaNode) {
+        //await this.wallet.getBalance()
+        const msw: msWallet = this.getMoneyStreamWallet()
+        //this.wallet.PrivateKey.toWif()
+        //const mskey = `L5NDEVBUT51jQbSTKbzrmKALTEgSR8evvkHen4QVcRVsYgnp5xSo`
+        await msw.tryLoadWalletUtxos()
+        if (msw.balance === 0) {
+            throw new Error(`No funds available`)
+        }
+        // const builder = new TransactionBuilder()
+        // from utxos
+        //const utxo = this.wallet.utxos[0]
+        const utxo = {
+            height: 742946,
+            tx_pos: 0,
+            tx_hash: '8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5',
+            value: 17424
+          }
+        // console.log(`UTXO`, utxo)
+
+        return 'TODO'
     }
 
     bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
@@ -51,7 +109,7 @@ export class Uploader {
 
     // build script for child node
     metaScript(parent: MetaNode|null, child: MetaNode) {
-        const digest = OpenSPV.Hash.sha512(child.content)
+        //const digest = OpenSPV.Hash.sha512(child.content)
         const encoding = ' '
         const mediaType = ' '
         //   OP_RETURN
@@ -77,7 +135,7 @@ export class Uploader {
         return ['OP_RETURN', this.asHex(opr)]
     }
     metaPreamble(parent: MetaNode|null, child: MetaNode): any {
-        const derivedKey = this.wallet?.key?.deriveChild(child.keyPath)
+        const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
         //console.log(`DERIVED`,derivedKey)
         return [constants.META_PROTOCOL, 
         derivedKey?.Address.toString(),

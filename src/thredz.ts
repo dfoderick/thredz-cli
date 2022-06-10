@@ -1,3 +1,5 @@
+// import OpenSPV from 'openspv'
+// console.log(OpenSPV.PrivKey)
 import { Wallet } from "./wallet.js";
 import { Uploader } from './uploader.js'
 import { Folder } from './folder.js'
@@ -13,19 +15,29 @@ const folder = new Folder()
 folder.user = wallet.user
 const uploader = new Uploader(wallet, folder)
 console.log(`Current Directory ${folder.cwd}`)
-console.log(`Current User ${wallet.user} at ${folder.getuserFolder()}`)
+console.log(`Current User ${wallet.user}[${wallet.AddressMeta}] at ${folder.getuserFolder()}`)
 const nameForDomain = `User Folder`
 switch (arg2) {
     case 'init':
-        if (wallet?.key) console.log(`thredz ready`)
-        else console.log(`There was a problem initializing thredz key ${wallet.key}`)
+        if (wallet?.keyMeta) console.log(`thredz ready`)
+        else console.log(`There was a problem initializing thredz key ${wallet.keyMeta}`)
         if (wallet?.user) console.log(`thredz user ${wallet?.user}`)
         else console.log(`run 'thredz user <username>' to setup user`)
         break;
     case 'fund':
-        console.log(`Fund wallet address`, wallet.Address)
-        const balance = await wallet.getBalance()
+        console.log(`Fund wallet address`, wallet.AddressFunding.toString())
+        // wallet.Address is the HD address
+        // use a derivation key for the funding address
+        console.log(`[old fund wallet address`, wallet.AddressLegacy,']')
+        const balance = await wallet.getBalance(wallet.AddressLegacy)
         console.log(`Wallet balance`, balance)
+        break;
+    case 'spend':
+        arg3 = process.argv[3]
+        if (!arg3) throw Error(`spend command needs argument`)
+        //const currentbalance = await wallet.getBalance()
+        //console.log(`Wallet balance`, currentbalance)
+        await uploader.testSpend(arg3)
         break;
     case 'user':
         arg3 = process.argv[3]
@@ -40,9 +52,9 @@ switch (arg2) {
         break;
     case 'upload':
         arg3 = process.argv[3]
-        const result = uploader.prepare(arg3)
+        const result = await uploader.prepare(arg3)
         console.log(`UPLOAD RESULT`, result)
-        folder.checkCommitsPending()
+        if (result.success) folder.checkCommitsPending()
         break;
     case 'status':
         folder.checkCommitsPending()
@@ -75,4 +87,3 @@ switch (arg2) {
         console.log(`UNKNOWN COMMAND`, arg1, arg2, arg3)
 }
 })()
-

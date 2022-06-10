@@ -2,6 +2,10 @@ import OpenSPV from 'openspv';
 import * as fs from "fs";
 import { MetaNode } from "./meta.js";
 import constants from "./constants.js";
+import { IndexingService } from 'moneystream-wallet';
+import { Wallet as msWallet } from 'moneystream-wallet';
+import { WalletStorage } from "./walletstorage.js";
+import Long from "long";
 export class Uploader {
     constructor(wallet, folder) {
         this.bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut';
@@ -10,19 +14,19 @@ export class Uploader {
         this.wallet = wallet;
         this.folder = folder;
     }
-    prepare(fileName) {
+    async prepare(fileName) {
         if (!fs.existsSync(fileName))
             return { success: false, result: `File does not exists` };
         const content = fs.readFileSync(fileName);
-        const build = this.makeTransaction(fileName, content);
+        const build = await this.makeTransaction(fileName, content);
         return { success: false, result: build };
     }
-    //TODO
-    makeTransaction(fileName, content) {
+    //TODO:
+    async makeTransaction(fileName, content) {
         console.log(`content`, content.length);
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
-        const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKey);
+        const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta);
         console.log(`content encrypted`, encContent.length);
         const node = new MetaNode();
         node.name = fileName;
@@ -34,18 +38,70 @@ export class Uploader {
         const test = true;
         if (test) {
             const script = this.metaScript(null, node);
-            build = script.toString();
+            node.script = script;
+            const metanetTransaction = await this.createTransaction(node);
+            build = metanetTransaction.toString();
             if (script)
-                this.folder.commit(script);
+                this.folder.commit(build);
         }
         else {
             this.folder.commit(Buffer.from(`TODO: this will be a transation\n`));
         }
         return { build: build };
     }
+    async testSpend(payTo) {
+        var _a;
+        const indexService = new IndexingService();
+        const msw = new msWallet(new WalletStorage(), indexService);
+        const wif = (_a = this.wallet.PrivateKeyFundingDerived) === null || _a === void 0 ? void 0 : _a.toWif();
+        //const wif = this.wallet.PrivateKeyLegacy?.toWif()
+        console.log(`wif`, wif);
+        msw.loadWallet(wif);
+        console.log(msw._keypair.toAddress().toString());
+        //await msw.tryLoadWalletUtxos()
+        const utxos = await msw.loadUnspent();
+        //console.log(msw._selectedUtxos)
+        console.log(`balance`, msw.balance);
+        const fee = 10;
+        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance - fee), undefined, payTo);
+        console.log(`build`, buildResult);
+        //const broadcastResult = await indexService.broadcastRaw(buildResult.hex)
+        //console.log(`broadcast`,broadcastResult)
+    }
+    getMoneyStreamWallet() {
+        var _a;
+        const indexService = new IndexingService();
+        const msw = new msWallet(new WalletStorage(), indexService);
+        const wif = (_a = this.wallet.PrivateKeyFundingDerived) === null || _a === void 0 ? void 0 : _a.toWif();
+        msw.loadWallet(wif);
+        msw.logDetails();
+        return msw;
+    }
+    //TODO: create the transaction
+    async createTransaction(node) {
+        //await this.wallet.getBalance()
+        const msw = this.getMoneyStreamWallet();
+        //this.wallet.PrivateKey.toWif()
+        //const mskey = `L5NDEVBUT51jQbSTKbzrmKALTEgSR8evvkHen4QVcRVsYgnp5xSo`
+        await msw.tryLoadWalletUtxos();
+        if (msw.balance === 0) {
+            throw new Error(`No funds available`);
+        }
+        // const builder = new TransactionBuilder()
+        // from utxos
+        //const utxo = this.wallet.utxos[0]
+        const utxo = {
+            height: 742946,
+            tx_pos: 0,
+            tx_hash: '8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5',
+            value: 17424
+        };
+        // console.log(`UTXO`, utxo)
+        return 'TODO';
+    }
     // build script for child node
     metaScript(parent, child) {
-        const digest = OpenSPV.Hash.sha512(child.content);
+        //const digest = OpenSPV.Hash.sha512(child.content)
         const encoding = ' ';
         const mediaType = ' ';
         //   OP_RETURN
@@ -72,7 +128,7 @@ export class Uploader {
     }
     metaPreamble(parent, child) {
         var _a, _b;
-        const derivedKey = (_b = (_a = this.wallet) === null || _a === void 0 ? void 0 : _a.key) === null || _b === void 0 ? void 0 : _b.deriveChild(child.keyPath);
+        const derivedKey = (_b = (_a = this.wallet) === null || _a === void 0 ? void 0 : _a.keyMeta) === null || _b === void 0 ? void 0 : _b.deriveChild(child.keyPath);
         //console.log(`DERIVED`,derivedKey)
         return [constants.META_PROTOCOL, derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address.toString(), parent === null ? 'NULL' : parent.transactionId];
     }

@@ -3,14 +3,18 @@ import OpenSPV from 'openspv'
 export class KeyPair {
     key: typeof OpenSPV.Bip32
 
-    get PublicKey() { 
+    get PublicKey(): typeof OpenSPV.PubKey { 
         return this.key?.toPublic().pubKey
     }
+    get PrivateKey(): typeof OpenSPV.PrivKey { 
+        return this.key?.privKey
+    }
 
-    get Address() { 
+    get Address():string { 
         const address = new OpenSPV.Address()
-        //pubKey.compressed = false
-        address.fromPubKey(this.key?.toPublic(), 'mainnet')
+        const pub = this.key?.toPublic()
+        pub.compressed = false
+        address.fromPubKey(pub, 'mainnet')
         return address.toString()
     }
     static fromRandom() {
@@ -31,6 +35,7 @@ export class KeyPair {
         derived.key = this.key.derive(path)
         return derived
     }
+    derive (path:string) { return this.deriveChild(path) }
 
     toString() { return this.key?.toString()}
 }

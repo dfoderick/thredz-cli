@@ -11,7 +11,9 @@ export class MetaNode {
         // node contents can be name of directory or file
         this.content = null;
         // location of node within hd key structure. experiment with saving onchain
-        this.keyPath = constants.HD_DERIVATION_PATH;
+        this.keyPath = constants.META_DERIVATION_PATH;
+        // script chunks that will be written to the transaction
+        this.script = [];
         // transaction where code is stored in metanet
         this.transactionId = '';
         // child nodes

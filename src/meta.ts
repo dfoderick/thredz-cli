@@ -11,7 +11,9 @@ export class MetaNode {
     // node contents can be name of directory or file
     content: Buffer | null = null
     // location of node within hd key structure. experiment with saving onchain
-    keyPath: string = constants.HD_DERIVATION_PATH
+    keyPath: string = constants.META_DERIVATION_PATH
+    // script chunks that will be written to the transaction
+    script: any[] = []
     // transaction where code is stored in metanet
     transactionId: string = ''
     // child nodes

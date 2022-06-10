@@ -22,6 +22,8 @@
   },
   "homepage": "https://github.com/dfoderick/thredz-cli#readme",
   "dependencies": {
+    "long": "^5.2.0",
+    "moneystream-wallet": "^0.2.15",
     "node-fetch": "^3.2.5",
     "openspv": "^3.0.29"
   },
