@@ -57,7 +57,8 @@ switch (arg2) {
         if (result.success) folder.checkCommitsPending()
         break;
     case 'status':
-        folder.checkCommitsPending()
+        arg3 = process.argv[3] || ''
+        folder.checkCommitsPending(arg3.length>0 && arg3.startsWith('detail'))
         break;
     case 'commit':
         if (folder.isPendingCommit()) {

@@ -3,14 +3,14 @@ import * as fs from "fs";
 import { MetaNode } from "./meta.js";
 import constants from "./constants.js";
 import { IndexingService } from 'moneystream-wallet';
-import { Wallet as msWallet } from 'moneystream-wallet';
+import { Wallet as msWallet, Script } from 'moneystream-wallet';
 import { WalletStorage } from "./walletstorage.js";
 import Long from "long";
+const bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut';
+const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY';
+const algorithm = 'SHA512';
 export class Uploader {
     constructor(wallet, folder) {
-        this.bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut';
-        this.dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY';
-        this.algorithm = 'SHA512';
         this.wallet = wallet;
         this.folder = folder;
     }
@@ -19,7 +19,7 @@ export class Uploader {
             return { success: false, result: `File does not exists` };
         const content = fs.readFileSync(fileName);
         const build = await this.makeTransaction(fileName, content);
-        return { success: false, result: build };
+        return { success: true, result: build };
     }
     //TODO:
     async makeTransaction(fileName, content) {
@@ -58,9 +58,7 @@ export class Uploader {
         console.log(`wif`, wif);
         msw.loadWallet(wif);
         console.log(msw._keypair.toAddress().toString());
-        //await msw.tryLoadWalletUtxos()
         const utxos = await msw.loadUnspent();
-        //console.log(msw._selectedUtxos)
         console.log(`balance`, msw.balance);
         const fee = 10;
         const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance - fee), undefined, payTo);
@@ -74,15 +72,13 @@ export class Uploader {
         const msw = new msWallet(new WalletStorage(), indexService);
         const wif = (_a = this.wallet.PrivateKeyFundingDerived) === null || _a === void 0 ? void 0 : _a.toWif();
         msw.loadWallet(wif);
-        msw.logDetails();
+        //msw.logDetails()
         return msw;
     }
     //TODO: create the transaction
     async createTransaction(node) {
         //await this.wallet.getBalance()
         const msw = this.getMoneyStreamWallet();
-        //this.wallet.PrivateKey.toWif()
-        //const mskey = `L5NDEVBUT51jQbSTKbzrmKALTEgSR8evvkHen4QVcRVsYgnp5xSo`
         await msw.tryLoadWalletUtxos();
         if (msw.balance === 0) {
             throw new Error(`No funds available`);
@@ -90,14 +86,19 @@ export class Uploader {
         // const builder = new TransactionBuilder()
         // from utxos
         //const utxo = this.wallet.utxos[0]
-        const utxo = {
-            height: 742946,
-            tx_pos: 0,
-            tx_hash: '8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5',
-            value: 17424
-        };
-        // console.log(`UTXO`, utxo)
-        return 'TODO';
+        // const utxo = {
+        //     height: 742946,
+        //     tx_pos: 0,
+        //     tx_hash: '8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5',
+        //     value: 17424
+        //   }
+        const fee = 20;
+        //payTo can be script
+        const payTo = new Script();
+        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance), undefined, payTo, fee);
+        console.log(`build`, buildResult);
+        msw.logDetailsLastTx();
+        return buildResult.hex;
     }
     // build script for child node
     metaScript(parent, child) {
@@ -112,7 +113,7 @@ export class Uploader {
         //   [Filename]
         const opr = [
             this.metaPreamble(parent, child),
-            this.bProtocolTag,
+            bProtocolTag,
             child.content,
             mediaType,
             encoding,

@@ -20,14 +20,16 @@ export class Folder {
         const contents = fs.readFileSync(fileName)
         return contents
     }
-    dumpFileContents(fileName:string) {
+    dumpFileContents(fileName:string, isCountOnly = false): number {
         const contents = this.getfileContents(fileName)
         // console.log(`it`, contents[0])
         if (contents[0] == 91) {
             const jcontents = JSON.parse(contents.toString())
-            console.log(jcontents)
+            if (!isCountOnly) console.log(jcontents)
+            return jcontents.length
         } else {
             console.log(contents.toString())
+            return NaN
         }
     }
     cancel() {
@@ -51,11 +53,12 @@ export class Folder {
         const commits = this.getcommitFileName()
         return fs.existsSync(commits)
     }
-    checkCommitsPending() {
+    checkCommitsPending(isDetail = false) {
         const commits = this.getcommitFileName()
         if (fs.existsSync(commits)) {
-            this.dumpFileContents(commits)
-            console.log(`Run 'thredz commit' to save changes to metanet`)
+            const count = this.dumpFileContents(commits, !isDetail)
+            console.log(`Run 'thredz commit' to save ${count} changes to metanet`)
+            if (!isDetail) console.log(`Run 'thredz status detail' see detailed changes`)
         } else {
             console.log(`No pending commits ${commits}`)
         }
