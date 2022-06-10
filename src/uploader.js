@@ -77,28 +77,35 @@ export class Uploader {
     }
     //TODO: create the transaction
     async createTransaction(node) {
+        var _a;
         //await this.wallet.getBalance()
         const msw = this.getMoneyStreamWallet();
         await msw.tryLoadWalletUtxos();
         if (msw.balance === 0) {
             throw new Error(`No funds available`);
         }
-        // const builder = new TransactionBuilder()
-        // from utxos
-        //const utxo = this.wallet.utxos[0]
-        // const utxo = {
-        //     height: 742946,
-        //     tx_pos: 0,
-        //     tx_hash: '8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5',
-        //     value: 17424
-        //   }
-        const fee = 20;
+        const fee = 1000; //TODO: estimate fees
         //payTo can be script
-        const payTo = new Script();
-        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance), undefined, payTo, fee);
-        console.log(`build`, buildResult);
-        msw.logDetailsLastTx();
+        const payTo = Script.fromSafeDataArray(node.script); //new Script(node.script)
+        console.log(`script for meta node has`, payTo.chunks.length, `chunks`);
+        //data will get added if payto is a Script object
+        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(0), undefined, payTo, fee);
+        //msw.addData
+        // const buildResult = await msw.makeStreamableCashTx(Long.fromNumber(0),
+        // payTo, false,undefined, undefined)
+        // console.log(`build`, buildResult)
+        //msw.logDetailsLastTx()
+        //console.log(buildResult.tx.txOuts[0])
+        this.logScript(buildResult.tx.txOuts[0].script);
+        console.log(`media size`, (_a = node.content) === null || _a === void 0 ? void 0 : _a.length);
+        console.log(`transaction size`, buildResult.hex.length);
         return buildResult.hex;
+    }
+    logScript(script) {
+        //console.log(script.chunks)
+        script.chunks.forEach((chunk) => {
+            console.log(chunk);
+        });
     }
     // build script for child node
     metaScript(parent, child) {
@@ -111,8 +118,9 @@ export class Uploader {
         //   [Media Type]
         //   [Encoding]
         //   [Filename]
+        // array elements should be buffer, string or number
         const opr = [
-            this.metaPreamble(parent, child),
+            ...this.metaPreamble(parent, child),
             bProtocolTag,
             child.content,
             mediaType,
@@ -125,21 +133,29 @@ export class Uploader {
             // 0x01,
             // 0x05
         ];
-        return ['OP_RETURN', this.asHex(opr)];
+        return this.asHexBuffers(opr);
     }
+    // metanet protocol scripts
     metaPreamble(parent, child) {
         var _a, _b;
         const derivedKey = (_b = (_a = this.wallet) === null || _a === void 0 ? void 0 : _a.keyMeta) === null || _b === void 0 ? void 0 : _b.deriveChild(child.keyPath);
         //console.log(`DERIVED`,derivedKey)
-        return [constants.META_PROTOCOL, derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address.toString(), parent === null ? 'NULL' : parent.transactionId];
+        if (!(derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address))
+            throw new Error(`METAnet protocol rerquire address ${derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address}`);
+        return [
+            constants.META_PROTOCOL,
+            derivedKey === null || derivedKey === void 0 ? void 0 : derivedKey.Address.toString(),
+            parent === null ? 'NULL' : parent.transactionId
+        ];
     }
-    asHex(arr) {
+    // returns script data as array of hex buffers that Script wants
+    asHexBuffers(arr) {
         return arr.map((a) => {
             if (a instanceof Buffer)
-                return a.toString('hex');
+                return Buffer.from(a.toString('hex'));
             if (typeof a === 'number') {
                 if (a < 16)
-                    return a.toString(16).padStart(2, '0');
+                    return Buffer.from(a.toString(16).padStart(2, '0'));
                 throw Error(`FIX ASHEX ${a}`);
             }
             return Buffer.from(a.toString('hex'));

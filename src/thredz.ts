@@ -53,7 +53,7 @@ switch (arg2) {
     case 'upload':
         arg3 = process.argv[3]
         const result = await uploader.prepare(arg3)
-        console.log(`UPLOAD RESULT`, result)
+        console.log(`UPLOAD RESULT`, result.success)
         if (result.success) folder.checkCommitsPending()
         break;
     case 'status':

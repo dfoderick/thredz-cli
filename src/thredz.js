@@ -56,7 +56,7 @@ import { Folder } from './folder.js';
         case 'upload':
             arg3 = process.argv[3];
             const result = await uploader.prepare(arg3);
-            console.log(`UPLOAD RESULT`, result);
+            console.log(`UPLOAD RESULT`, result.success);
             if (result.success)
                 folder.checkCommitsPending();
             break;
@@ -84,10 +84,10 @@ import { Folder } from './folder.js';
         thredz init (initialize system)
         thredz user <user> (create user)
         TODO thredz mkdir <dir> (create folder)
-        TODO thredz upload (upload a file)
-        thredz status (show pending edits)
+        TODO thredz upload <path> (upload a file)
+        thredz status detail? (show pending edits)
         TODO thredz commit (save changes to metanet)
-        TODO thredz cancel (delete pending changes)
+        thredz cancel (delete pending changes)
         thredz help (show help)`);
             break;
         case undefined:
