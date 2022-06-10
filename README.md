@@ -4,6 +4,10 @@ The thredz philosophy is simple. You allocate a section of your hard drive to re
 The thredz client tool is simple if you know how to use a command line. The current state of the tooling is primitive but will be improved with important visualizers for a more friendly user interface. Until then you are working on bare metal with no safety net. Have fun!
 
 # Do it
+Use node version 16 or above
+```
+nvm use 16
+```
 Clone and Install
 ```
 git clone https://github.com/dfoderick/thredz-cli
