@@ -17,12 +17,12 @@ npm install
 
 Run with 
 ```
-tsc && npx ts-node src/thredz init
-tsc && npx ts-node src/thredz fund
-tsc && npx ts-node src/thredz user <your user name here>
+npx ts-node src/thredz init
+npx ts-node src/thredz fund
+npx ts-node src/thredz user <your user name here>
 ```
 ```
-tsc && npx ts-node src/thredz help
+npx ts-node src/thredz help
 ```
 
 # Dev notes

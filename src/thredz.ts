@@ -76,10 +76,10 @@ switch (arg2) {
         thredz init (initialize system)
         thredz user <user> (create user)
         TODO thredz mkdir <dir> (create folder)
-        TODO thredz upload (upload a file)
-        thredz status (show pending edits)
+        TODO thredz upload <path> (upload a file)
+        thredz status detail? (show pending edits)
         TODO thredz commit (save changes to metanet)
-        TODO thredz cancel (delete pending changes)
+        thredz cancel (delete pending changes)
         thredz help (show help)`)
         break;
     case undefined:
