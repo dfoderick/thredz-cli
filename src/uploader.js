@@ -43,10 +43,10 @@ export class Uploader {
             const metanetTransaction = await this.createTransaction(node);
             build = metanetTransaction.toString();
             if (script)
-                this.folder.commit(build);
+                this.folder.stageWork(build);
         }
         else {
-            this.folder.commit(Buffer.from(`TODO: this will be a transation\n`));
+            this.folder.stageWork(Buffer.from(`TODO: this will be a transation\n`));
         }
         return { build: build };
     }
@@ -64,8 +64,6 @@ export class Uploader {
         const fee = 10;
         const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance - fee), undefined, payTo);
         console.log(`build`, buildResult);
-        //const broadcastResult = await indexService.broadcastRaw(buildResult.hex)
-        //console.log(`broadcast`,broadcastResult)
     }
     getMoneyStreamWallet() {
         var _a;
@@ -76,16 +74,16 @@ export class Uploader {
         //msw.logDetails()
         return msw;
     }
-    //TODO: create the transaction
+    //create a transaction for the node
     async createTransaction(node) {
-        var _a, _b, _c;
+        var _a, _b;
         //await this.wallet.getBalance()
         const msw = this.getMoneyStreamWallet();
         await msw.tryLoadWalletUtxos();
         if (msw.balance === 0) {
             throw new Error(`No funds available`);
         }
-        const fee = 1000; //TODO: estimate fees
+        const fee = 20000; //TODO: estimate fees
         //payTo can be script
         const payTo = Script.fromSafeDataArray(node.script); //new Script(node.script)
         console.log(`script for meta node has`, payTo.chunks.length, `chunks`);
@@ -95,24 +93,42 @@ export class Uploader {
         // const buildResult = await msw.makeStreamableCashTx(Long.fromNumber(0),
         // payTo, false,undefined, undefined)
         // console.log(`build`, buildResult)
-        //msw.logDetailsLastTx()
+        msw.logDetailsLastTx();
         //console.log(buildResult.tx.txOuts[0])
         buildResult.tx.txOuts.forEach((o) => {
             this.logScript(o.script);
         });
         console.log(`media size encrypted`, (_a = node.content) === null || _a === void 0 ? void 0 : _a.length);
         console.log(`      media size x 2`, (((_b = node.content) === null || _b === void 0 ? void 0 : _b.length) || 0) * 2);
-        console.log(`      media size x 4`, (((_c = node.content) === null || _c === void 0 ? void 0 : _c.length) || 0) * 4);
         console.log(`    transaction size`, buildResult.hex.length);
         return buildResult.hex;
     }
     logScript(script) {
-        //console.log(script.chunks)
         script.chunks.forEach((chunk) => {
             if (chunk.len)
                 console.log(chunk.len);
             //else console.log(chunk)
         });
+    }
+    // commit UOW by broadcasting changes to metanet
+    async commit() {
+        const commits = this.folder.getCommits();
+        const committed = [];
+        if (commits) {
+            const indexService = new IndexingService();
+            for (let i = 0; i < commits.length; i++) {
+                // example result: 123d27dc4a5024e87178e0d6e7dee476c114d928a627a27be5ce9840ccf18a72
+                const broadcastResult = await indexService.broadcastRaw(commits[i].hex);
+                console.log(`broadcast`, broadcastResult);
+                // if broadcast success then mark this commit and store the txn
+                commits[i].broadcast = broadcastResult;
+                this.folder.storeTransaction(commits[i]);
+                committed.push(commits[i]);
+            }
+        }
+        //store the updated commits
+        this.folder.saveCommits(commits);
+        return committed;
     }
     // build script for child node
     metaScript(parent, child) {

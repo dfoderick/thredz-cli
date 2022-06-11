@@ -66,7 +66,9 @@ import { Folder } from './folder.js';
             break;
         case 'commit':
             if (folder.isPendingCommit()) {
-                console.log(`TODO commit changes`);
+                const result = await uploader.commit();
+                console.log(`published ${result === null || result === void 0 ? void 0 : result.length} commits`);
+                folder.checkCommitsPending();
             }
             else
                 console.log(`No pending commits`);

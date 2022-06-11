@@ -62,7 +62,9 @@ switch (arg2) {
         break;
     case 'commit':
         if (folder.isPendingCommit()) {
-            console.log(`TODO commit changes`)
+            const result = await uploader.commit()
+            console.log(`published ${result?.length} commits`)
+            folder.checkCommitsPending()
         } else console.log(`No pending commits`)
         break;
     case 'cancel':
