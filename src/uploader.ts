@@ -37,7 +37,8 @@ export class Uploader {
         console.log(`content encrypted`, encContent.length)
         const node: MetaNode = new MetaNode()
         node.name = fileName
-        node.content = content
+        // node content is encrypted content
+        node.content = encContent
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
             throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
         }
@@ -102,15 +103,20 @@ export class Uploader {
         // console.log(`build`, buildResult)
         //msw.logDetailsLastTx()
         //console.log(buildResult.tx.txOuts[0])
-        this.logScript(buildResult.tx.txOuts[0].script)
-        console.log(`media size`, node.content?.length)
-        console.log(`transaction size`, buildResult.hex.length)
+        buildResult.tx.txOuts.forEach((o:any) => {
+            this.logScript(o.script)
+        })
+        console.log(`media size encrypted`, node.content?.length)
+        console.log(`      media size x 2`, (node.content?.length||0)*2)
+//        console.log(`      media size x 4`, (node.content?.length||0)*4)
+        console.log(`    transaction size`, buildResult.hex.length)
         return buildResult.hex
     }
     logScript(script:any) {
         //console.log(script.chunks)
         script.chunks.forEach((chunk:any) => {
-            console.log(chunk)
+            if (chunk.len) console.log(chunk.len, )
+            //else console.log(chunk)
         })
     }
 
@@ -157,7 +163,7 @@ export class Uploader {
     // returns script data as array of hex buffers that Script wants
     asHexBuffers(arr:any[]): Buffer[] {
         return arr.map((a: any) => {
-            if (a instanceof Buffer) return Buffer.from(a.toString('hex'))
+            if (a instanceof Buffer) return a //Buffer.from(a.toString('hex'))
             if (typeof a === 'number') {
                 if (a < 16 ) return Buffer.from(a.toString(16).padStart(2,'0'))
                 throw Error(`FIX ASHEX ${a}`)
