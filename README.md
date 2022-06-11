@@ -17,12 +17,39 @@ npm install
 
 Run with 
 ```
-npx ts-node src/thredz init
-npx ts-node src/thredz fund
-npx ts-node src/thredz user <your user name here>
+npx ts-node src/thredz
 ```
+this will show you your thredz prompt
 ```
-npx ts-node src/thredz help
+thredz$\\
+```
+Run `help` to show a list of commands you can do.  
+Give yourself a name with the user command
+```
+thredz$\\ user dave
+```
+the prompt will change to your user. you are now logged in
+```
+thredz$\\dave\
+```
+
+`help`
+```
+thredz$\\dave\ help
+
+  Commands:
+
+    help [command...]  Provides help for a given command.
+    exit               Exits application.
+    init               Initializes thredz
+    wallet             Shows wallet and funding instructions
+    user <name>        creates a user folder
+    spend <address>    sends payment to address
+    commit             writes pending commits to metanet
+    cancel             Deletes pending commits
+    status [options]   shows pending commits
+    upload <filename>  upload a file to metanet
+    mkdir <name>       create a directory/folder
 ```
 
 # Dev notes

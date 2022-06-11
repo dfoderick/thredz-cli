@@ -100,7 +100,7 @@ export class Folder {
         if (fs.existsSync(commits)) {
             const count = this.dumpFileContents(commits, !isDetail)
             console.log(`Run 'thredz commit' to save ${count} changes to metanet`)
-            if (!isDetail) console.log(`Run 'thredz status detail' see detailed changes`)
+            if (!isDetail) console.log(`Run 'status -d' to see detailed changes`)
         } else {
             console.log(`No pending commits ${commits}`)
         }

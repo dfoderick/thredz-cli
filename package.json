@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/dfoderick/thredz-cli#readme",
   "dependencies": {
+    "@moleculer/vorpal": "^1.11.5",
     "long": "^5.2.0",
     "moneystream-wallet": "^0.2.15",
     "node-fetch": "^3.2.5",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.41",
+    "@types/vorpal": "^1.12.2",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.3"
   }
