@@ -1,11 +1,11 @@
 // import OpenSPV from 'openspv'
 // console.log(OpenSPV.PrivKey)
-import { Wallet } from "./wallet.js";
-import { Uploader } from './uploader.js'
-import { Folder } from './folder.js'
+import { Wallet } from "./src/wallet.js";
+import { Uploader } from './src/uploader.js'
+import { Folder } from './src/folder.js'
 
 import Vorpal from "@moleculer/vorpal";
-import { wrapTryCatch } from "./utils.js";
+import { wrapTryCatch } from "./src/utils.js";
 export const vorpal = new Vorpal();
 //console.log(vorpal)
 

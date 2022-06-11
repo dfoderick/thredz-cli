@@ -17,7 +17,7 @@ npm install
 
 Run with 
 ```
-npx ts-node src/thredz
+npx ts-node thredz
 ```
 this will show you your thredz prompt
 ```
