@@ -23,6 +23,7 @@
   "homepage": "https://github.com/dfoderick/thredz-cli#readme",
   "dependencies": {
     "@moleculer/vorpal": "^1.11.5",
+    "hyperswarm": "^2.15.3",
     "long": "^5.2.0",
     "moneystream-wallet": "^0.2.15",
     "node-fetch": "^3.2.5",

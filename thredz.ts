@@ -4,12 +4,14 @@ import { Wallet } from "./src/wallet.js";
 import { Uploader } from './src/uploader.js'
 import { Folder } from './src/folder.js'
 
+import hyperswarm from 'hyperswarm'
+//const hyperswarm = require('hyperswarm')
+import crypto from 'crypto'
+
 import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils.js";
+import { Socket } from "net";
 export const vorpal = new Vorpal();
-//console.log(vorpal)
-
-//type Action = (args: Args) => Promise<void>;
 
 const arg1 = process.argv[1]
 const arg2 = process.argv[2]
@@ -23,16 +25,35 @@ console.log(`Current Directory ${folder.cwd}`)
 console.log(`Current User ${wallet.user}[${wallet.AddressMeta}] at ${folder.getuserFolder()}`)
 const nameForDomain = `User Folder`
 
-// vorpal.command("foo <name>", "foo bar command")
-//     .action(
-//         wrapTryCatch(async ({ name }: { name: string }) => {
-//             vorpal.log(`BAR`, name)
-//         })
-//       );
+//swarm
+const topic = crypto.createHash('sha256')
+  .update('thredz')
+  .digest()
+const swarm = hyperswarm()
+swarm.join(topic, {
+    lookup: true, // find & connect to peers
+    announce: true // optional- announce self as a connection target
+})
+
+let swarmSocket:Socket
+swarm.on('connection', (socket:any, info:any) => {
+    swarmSocket = socket
+    // info is a PeerInfo
+    console.log('new connection', info.status)
+    socket.on('data', (data:any) => console.log('client got message:', data.toString()))
+    // you can now use the socket as a stream, eg:
+    // process.stdin.pipe(socket).pipe(process.stdout)
+})
+
+vorpal
+    .command('send <message>', 'send a message')
+    .action(wrapTryCatch(async ({ message }: { message: string }) => {
+        swarmSocket?.write(message)
+    }));
 
 vorpal
     .command('init', 'Initializes thredz')
-    .action(async (args:any) => {
+    .action(async () => {
         if (wallet?.keyMeta) vorpal.log(`thredz ready`)
         else vorpal.log(`There was a problem initializing thredz key ${wallet.keyMeta}`)
         if (wallet?.user) console.log(`thredz user ${wallet?.user}`)
