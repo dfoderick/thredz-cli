@@ -77,11 +77,11 @@ vorpal
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         const alreadyExists = folder.createUser(name)
         if (!alreadyExists) {
-            const node: MetaNode = new MetaNode(folder.getuserFolder())
-            const script = uploader.metaScript(null, node)
-            console.log(node)
-            node.script = script
-            const metanetTransaction = await uploader.createTransaction(node)
+            const root: MetaNode = folder.mkdir()
+            const script = uploader.metaScript(null, root)
+            console.log(root)
+            root.script = script
+            const metanetTransaction = await uploader.createTransaction(root)
             console.log(metanetTransaction)
             const build = metanetTransaction.toString()
             if (script) folder.stageWork(build)

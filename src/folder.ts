@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { MetaNode } from "./meta";
 
 export class Folder {
     user: string = ''
@@ -25,6 +26,15 @@ export class Folder {
         }
         return true
     }
+
+    // create a folder and associated metanode
+    mkdir(folderName?:string): MetaNode {
+        const folder = `${this.getuserFolder()}/${folderName||''}`
+        if (!fs.existsSync(folder)) fs.mkdirSync(folder)
+        const node = new MetaNode(folderName||this.user)
+        return node
+    }
+
     getTransactionsInFolder(folderName: string, startsWith: string) {
         const folderfiles = fs.readdirSync(folderName)
         let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
@@ -119,7 +129,7 @@ export class Folder {
         const commits = this.getcommitFileName()
         if (fs.existsSync(commits)) {
             const count = this.dumpFileContents(commits, !isDetail)
-            console.log(`Run 'thredz commit' to save ${count} changes to metanet`)
+            console.log(`Run 'commit' to save ${count} changes to metanet`)
             if (!isDetail) console.log(`Run 'status -d' to see detailed changes`)
         } else {
             console.log(`No pending commits ${commits}`)

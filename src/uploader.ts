@@ -152,11 +152,6 @@ export class Uploader {
         // array elements should be buffer, string or number
         const opr: any[] = [
             ...this.metaPreamble(parent, child),
-            bProtocolTag,
-            child.content || 'NULL',
-            mediaType,
-            encoding,
-            child.name,
             // '|',
             // this.dipProtocolTag,
             // this.algorithm,
@@ -164,6 +159,16 @@ export class Uploader {
             // 0x01,
             // 0x05
         ]
+        if (child.content) {
+            opr.push([bProtocolTag,
+                child.content || 'NULL',
+                mediaType,
+                encoding,
+                child.name,
+            ])
+        } else {
+            opr.push([child.name,])
+        }
         //console.log(opr)
         return this.asHexBuffers(opr)
     }
@@ -173,6 +178,9 @@ export class Uploader {
         const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
         //console.log(`DERIVED`,derivedKey)
         if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
+        if (parent && !parent.transactionId) {
+            throw new Error(`Parent node must have a transactionId`)
+        }
         return [
             constants.META_PROTOCOL, 
             derivedKey?.Address.toString(),
