@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "rm -f jest.config.js && jest",
-    "prepare": "cp ./src/hyperswarm.d.ts ./node_modules/hyperswarm/index.d.ts && cp ./src/vorpal.d.ts ./node_modules/@moleculer/vorpal/index.d.ts && cp ./src/openspv.d.ts ./node_modules/openspv/index.d.ts && tsc"
+    "prepare": "cp ./src/hyperswarm.d.ts ./node_modules/hyperswarm/index.d.ts && cp ./src/vorpal.d.ts ./node_modules/@moleculer/vorpal/index.d.ts && cp ./src/openspv.d.ts ./node_modules/openspv/index.d.ts && tsc",
+    "thredz" : "npx ts-node thredz"
   },
   "repository": { 
     "type": "git",
