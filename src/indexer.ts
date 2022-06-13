@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';
+// node18 has its own fetch
+//import fetch from 'node-fetch';
 
 export class Indexer {
       // get utxos for an address

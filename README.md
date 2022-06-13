@@ -4,20 +4,21 @@ The thredz philosophy is simple. You allocate a section of your hard drive to re
 The thredz client tool is simple if you know how to use a command line. The current state of the tooling is primitive but will be improved with important visualizers for a more friendly user interface. Until then you are working on bare metal with no safety net. Have fun!
 
 # Do it
-Use node version 16 or above
+Thredz has been tested using node version 18. Older versions above 12 might also work.
 ```
-nvm use 16
+nvm use 18
 ```
 Clone and Install
 ```
 git clone https://github.com/dfoderick/thredz-cli
 cd thredz-cli
-npm install
+yarn install
+yarn prepare
 ```
 
 Run with 
 ```
-npx ts-node thredz
+npx ts-node --esm thredz
 ```
 this will show you your thredz prompt
 ```
@@ -61,3 +62,21 @@ import { Wallet } from "./wallet.js";
 # thredz overview
 https://github.com/dfoderick/thredz
 
+
+# Troubleshooting
+If you have errors, first make sure you can run the tests.
+```
+yarn test
+```
+```
+Error: Cannot find module 'bsv'
+```
+Solution: reinstall moneystream-wallet. bsv library has to be built.
+```
+yarn add moneystream-wallet
+```
+
+# other
+```
+  "type": "module",
+```

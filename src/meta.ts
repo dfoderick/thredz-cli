@@ -1,4 +1,4 @@
-import constants from './constants.js'
+import constants from './constants'
 
 // a metanet node
 // an in-memory graph of notes will be maintained by app
@@ -18,4 +18,8 @@ export class MetaNode {
     transactionId: string = ''
     // child nodes
     children: MetaNode[] = []
+
+    constructor(name:string) {
+        this.name = name
+    }
 }

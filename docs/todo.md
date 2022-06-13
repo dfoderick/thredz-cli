@@ -21,7 +21,6 @@ use bitcoin script, CATN8 superscrpt, or any compatible language to transform an
 * metanet indexing for a database? how to cache??? check with metacache
 * make an example of document versioning
 * make a db for storing transaction locally
-* add p2p messaging
 * 
 
 * provider for contracting at layer 2. script, catn8, run, js, forth, etc...

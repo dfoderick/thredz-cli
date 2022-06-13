@@ -7,6 +7,8 @@ export class Folder {
     getuserFolder() { return `${this.userRoot}${this.user}` }
     getcommitFileName() { return `${this.getuserFolder()}/.commits` }
     getTransactionFileName(txid:string) { return `${this.getuserFolder()}/.thredz.tx.${txid}` }
+    // creates a folder under /users and a root metanet transaction
+    // returns false if transaction needs to be made
     createUser(user: string) {
         this.user = user
         const userFolder = this.getuserFolder()
@@ -16,9 +18,27 @@ export class Folder {
             fs.mkdirSync(userFolder)
             console.log(`made ${userFolder}`)
         }
+        //get transactions in user folder
+        const transactions = this.getTransactionsInFolder(userFolder, '.thredz.tx.')
+        if (!transactions || transactions.length === 0) {
+            return false
+        }
+        return true
     }
+    getTransactionsInFolder(folderName: string, startsWith: string) {
+        const folderfiles = fs.readdirSync(folderName)
+        let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
+        const transactions:any[] = []
+        files.forEach(f => {
+            const contents = this.getfileContents(f)
+            transactions.push(JSON.parse(contents.toString()))
+        })
+        return transactions
+    }
+
     getfileContents(fileName:string) {
         const contents = fs.readFileSync(fileName)
+        console.log(fileName)
         return contents
     }
 

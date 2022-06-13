@@ -1,13 +1,13 @@
 //    "bsv": "git+https://github.com/moneystreamdev/bsv.git",
-import { Wallet } from "./wallet.js";
-import { Folder } from "./folder.js"
+import { Wallet } from "./wallet";
+import { Folder } from "./folder"
 import OpenSPV from 'openspv';
 import * as fs from "fs";
-import { MetaNode } from "./meta.js";
-import constants from "./constants.js";
+import { MetaNode } from "./meta";
+import constants from "./constants";
 import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
-import { WalletStorage } from "./walletstorage.js";
+import { WalletStorage } from "./walletstorage";
 import Long from "long";
 
 const bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
@@ -35,8 +35,7 @@ export class Uploader {
         //console.log(`pubkey`, this.wallet.PublicKey)
         const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
-        const node: MetaNode = new MetaNode()
-        node.name = fileName
+        const node: MetaNode = new MetaNode(fileName)
         // node content is encrypted content
         node.content = encContent
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
@@ -46,7 +45,9 @@ export class Uploader {
         let build = ``
         const test = true
         if (test) {
-            const script = this.metaScript(null, node)
+            //TODO use parent if subdirectory
+            const parent = null
+            const script = this.metaScript(parent, node)
             node.script = script
             const metanetTransaction = await this.createTransaction(node)
             build = metanetTransaction.toString()
@@ -152,7 +153,7 @@ export class Uploader {
         const opr: any[] = [
             ...this.metaPreamble(parent, child),
             bProtocolTag,
-            child.content,
+            child.content || 'NULL',
             mediaType,
             encoding,
             child.name,
@@ -163,6 +164,7 @@ export class Uploader {
             // 0x01,
             // 0x05
         ]
+        //console.log(opr)
         return this.asHexBuffers(opr)
     }
 
@@ -185,6 +187,7 @@ export class Uploader {
                 if (a < 16 ) return Buffer.from(a.toString(16).padStart(2,'0'))
                 throw Error(`FIX ASHEX ${a}`)
             }
+            if (a === null) throw new Error(`METANET script element cannot be NULL`)
             return Buffer.from(a.toString('hex'))
         })
     }

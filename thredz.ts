@@ -1,21 +1,22 @@
 // import OpenSPV from 'openspv'
 // console.log(OpenSPV.PrivKey)
-import { Wallet } from "./src/wallet.js";
-import { Uploader } from './src/uploader.js'
-import { Folder } from './src/folder.js'
+import { Wallet } from "./src/wallet";
+import { Uploader } from './src/uploader'
+import { Folder } from './src/folder'
 
 import hyperswarm from 'hyperswarm'
 //const hyperswarm = require('hyperswarm')
 import crypto from 'crypto'
 
 import Vorpal from "@moleculer/vorpal";
-import { wrapTryCatch } from "./src/utils.js";
+import { wrapTryCatch } from "./src/utils";
 import { Socket } from "net";
+import { MetaNode } from "./src/meta";
 export const vorpal = new Vorpal();
 
-const arg1 = process.argv[1]
-const arg2 = process.argv[2]
-let arg3
+// const arg1 = process.argv[1]
+// const arg2 = process.argv[2]
+// let arg3
 let wallet = new Wallet()
 wallet = wallet.load()
 const folder = new Folder()
@@ -57,7 +58,7 @@ vorpal
         if (wallet?.keyMeta) vorpal.log(`thredz ready`)
         else vorpal.log(`There was a problem initializing thredz key ${wallet.keyMeta}`)
         if (wallet?.user) console.log(`thredz user ${wallet?.user}`)
-        else vorpal.log(`run 'thredz user <username>' to setup user`)    
+        else vorpal.log(`run 'user <username>' to setup user`)    
     });
 
 vorpal
@@ -74,7 +75,17 @@ vorpal
 vorpal
     .command('user <name>', 'creates a user folder')
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
-        folder.createUser(name)
+        const alreadyExists = folder.createUser(name)
+        if (!alreadyExists) {
+            const node: MetaNode = new MetaNode(folder.getuserFolder())
+            const script = uploader.metaScript(null, node)
+            console.log(node)
+            node.script = script
+            const metanetTransaction = await uploader.createTransaction(node)
+            console.log(metanetTransaction)
+            const build = metanetTransaction.toString()
+            if (script) folder.stageWork(build)
+        }
         wallet.user = name
         wallet.writeWallet()
         folder.checkCommitsPending()
@@ -111,7 +122,6 @@ vorpal
     .command('status', 'shows pending commits')
     .option("-d, --details", "detail output")
     .action(wrapTryCatch(async ({ options }: any) => {
-        //console.log(`details`, options.details)
             folder.checkCommitsPending(options.details?true:false)
         }));
 

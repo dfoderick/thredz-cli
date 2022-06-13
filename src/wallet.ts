@@ -1,8 +1,8 @@
 import OpenSPV from 'openspv';
-import { KeyPair } from "./key.js";
+import { KeyPair } from "./key";
 import * as fs from "fs";
-import constants from "./constants.js";
-import { Indexer } from "./indexer.js";
+import constants from "./constants";
+import { Indexer } from "./indexer";
 
 export class Wallet {
     indexer: Indexer = new Indexer()
@@ -12,6 +12,13 @@ export class Wallet {
     keyFunding: KeyPair | null = null
     user: string = ''
     utxos: any = []
+
+    static fromRandom() {
+        const w = new Wallet()
+        w.keyMeta = KeyPair.fromRandom()
+        w.keyFunding = KeyPair.fromRandom()
+        return w
+    }
 
     // this is the unused funding that needs to be reversed
     //https://whatsonchain.com/tx/8a63d5ca3e3b56a745105960006a3866742695319cb3b888396f7f8f7d475bb5
