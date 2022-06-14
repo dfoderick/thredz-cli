@@ -3,7 +3,7 @@ import { Wallet } from "./wallet";
 import { Folder } from "./folder"
 import OpenSPV from 'openspv';
 import * as fs from "fs";
-import { MetaNode } from "./meta";
+import { MetaNode } from "./models/meta";
 import constants from "./constants";
 import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
@@ -82,7 +82,7 @@ export class Uploader {
         return msw
     }
 
-    //create a transaction for the node
+    //create a transaction for the node, returns the updated node
     async createTransaction(node: MetaNode) {
         //await this.wallet.getBalance()
         const msw: msWallet = this.getMoneyStreamWallet()
@@ -90,7 +90,7 @@ export class Uploader {
         if (msw.balance === 0) {
             throw new Error(`No funds available`)
         }
-        const fee = 20000 //TODO: estimate fees
+        const fee = 100 //TODO: estimate fees
         //payTo can be script
         const payTo = Script.fromSafeDataArray(node.script) //new Script(node.script)
         console.log(`script for meta node has`, payTo.chunks.length,`chunks`)
@@ -105,10 +105,15 @@ export class Uploader {
         buildResult.tx.txOuts.forEach((o:any) => {
             this.logScript(o.script)
         })
-        console.log(`media size encrypted`, node.content?.length)
-        console.log(`      media size x 2`, (node.content?.length||0)*2)
+        if (node.content) {
+            console.log(`media size encrypted`, node.content?.length)
+            console.log(`      media size x 2`, (node.content?.length||0)*2)
+        }
         console.log(`    transaction size`, buildResult.hex.length)
-        return buildResult.hex
+        node.transactionId = buildResult?.txId
+        node.hex = buildResult.hex
+        //todo: save additional build result info???
+        return node
     }
     logScript(script:any) {
         script.chunks.forEach((chunk:any) => {

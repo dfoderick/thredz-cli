@@ -1,13 +1,16 @@
 import * as fs from "fs";
-import { MetaNode } from "./meta";
+import { MetaNode } from "./models/meta";
+
+const commitsFileName = '.commits'
+const txFileNamePrefix = '.thredz.tx.'
 
 export class Folder {
     user: string = ''
     userRoot = `./users/`
     get cwd() { return process.cwd() }
     getuserFolder() { return `${this.userRoot}${this.user}` }
-    getcommitFileName() { return `${this.getuserFolder()}/.commits` }
-    getTransactionFileName(txid:string) { return `${this.getuserFolder()}/.thredz.tx.${txid}` }
+    getcommitFileName() { return `${this.getuserFolder()}/${commitsFileName}` }
+    getTransactionFileName(txid:string) { return `${this.getuserFolder()}/${txFileNamePrefix}${txid}` }
     // creates a folder under /users and a root metanet transaction
     // returns false if transaction needs to be made
     createUser(user: string) {
@@ -20,8 +23,9 @@ export class Folder {
             console.log(`made ${userFolder}`)
         }
         //get transactions in user folder
-        const transactions = this.getTransactionsInFolder(userFolder, '.thredz.tx.')
+        const transactions = this.getTransactionsInFolder(userFolder, txFileNamePrefix)
         if (!transactions || transactions.length === 0) {
+            //TODO: look for root transaction
             return false
         }
         return true
@@ -29,7 +33,8 @@ export class Folder {
 
     // create a folder and associated metanode
     mkdir(folderName?:string): MetaNode {
-        const folder = `${this.getuserFolder()}/${folderName||''}`
+        const folder = `${this.getuserFolder()}${folderName ? '/'+folderName:''}`
+        if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
         const node = new MetaNode(folderName||this.user)
         return node
@@ -40,7 +45,7 @@ export class Folder {
         let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
         const transactions:any[] = []
         files.forEach(f => {
-            const contents = this.getfileContents(f)
+            const contents = this.getfileContents(folderName+'/'+f)
             transactions.push(JSON.parse(contents.toString()))
         })
         return transactions
@@ -110,15 +115,14 @@ export class Folder {
         }
     }
     //stage a step of a unit of work
-    stageWork(content: any) {
+    stageWork(node: MetaNode) {
         let jcurrent = []
         if (this.isPendingCommit()){
             const current = this.getfileContents(this.getcommitFileName())
             jcurrent = JSON.parse(current.toString())    
         }
-        // commit file will be an array of json objects
-        jcurrent.push({hex: content.toString()})
-        //fs.appendFileSync(this.getcommitFileName(), content.toString())
+        // commit file will be an array of json MetaNode objects
+        jcurrent.push(node)
         this.saveCommits(jcurrent)
     }
     isPendingCommit() {

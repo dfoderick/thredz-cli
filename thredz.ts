@@ -11,7 +11,7 @@ import crypto from 'crypto'
 import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils";
 import { Socket } from "net";
-import { MetaNode } from "./src/meta";
+import { MetaNode } from "./src/models/meta";
 export const vorpal = new Vorpal();
 
 // const arg1 = process.argv[1]
@@ -81,10 +81,10 @@ vorpal
             const script = uploader.metaScript(null, root)
             console.log(root)
             root.script = script
-            const metanetTransaction = await uploader.createTransaction(root)
-            console.log(metanetTransaction)
-            const build = metanetTransaction.toString()
-            if (script) folder.stageWork(build)
+            const metanetNodeBuilt = await uploader.createTransaction(root)
+            console.log(metanetNodeBuilt)
+            //const build = metanetNodeBuilt.toString()
+            if (script) folder.stageWork(metanetNodeBuilt)
         }
         wallet.user = name
         wallet.writeWallet()
