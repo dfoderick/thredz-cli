@@ -12,7 +12,7 @@ export const vorpal = new Vorpal();
 let wallet = new Wallet()
 wallet = wallet.load()
 const folder = new Folder()
-folder.user = wallet.user
+folder.cd(wallet.user)
 const uploader = new Uploader(wallet, folder)
 console.log(`Current Directory ${folder.cwd}`)
 console.log(`Current User ${wallet.user}[${wallet.AddressMeta}] at ${folder.getuserFolder()}`)
@@ -62,7 +62,6 @@ vorpal
             root.script = script
             const metanetNodeBuilt = await uploader.createTransaction(root)
             console.log(metanetNodeBuilt)
-            //const build = metanetNodeBuilt.toString()
             if (script) folder.stageWork(metanetNodeBuilt)
         }
         wallet.user = name
@@ -115,9 +114,19 @@ vorpal
 vorpal
     .command('mkdir <name>', 'create a directory/folder')
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
-        console.log(`TODO create directory ${name}`)
+        folder.mkdir(name)
+    }));
+vorpal
+    .command('cd <dir>', 'change directory')
+    .action(wrapTryCatch(async ({ dir }: { dir: string }) => {
+        folder.cd(dir)
     }));
     
+vorpal
+    .command('ls', 'show files and objects in a folder')
+    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+        folder.ls()
+    }));
     
 vorpal
   .delimiter(`thredz$\\\\${wallet.user}\\`)

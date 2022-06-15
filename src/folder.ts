@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from 'path'
 import { MetaNode } from "./models/meta";
 
 const commitsFileName = '.commits'
@@ -7,23 +8,26 @@ const txFileNamePrefix = '.thredz.tx.'
 export class Folder {
     user: string = ''
     userRoot = `./users/`
+    // the curent user path
+    currentPath = this.userRoot
     get cwd() { return process.cwd() }
     getuserFolder() { return `${this.userRoot}${this.user}` }
-    getcommitFileName() { return `${this.getuserFolder()}/${commitsFileName}` }
-    getTransactionFileName(txid:string) { return `${this.getuserFolder()}/${txFileNamePrefix}${txid}` }
+    //todo: recursively find commits
+    getcommitFileName() { return `${this.currentPath}/${commitsFileName}` }
+    getTransactionFileName(txid:string) { return `${this.currentPath}/${txFileNamePrefix}${txid}` }
     // creates a folder under /users and a root metanet transaction
     // returns false if transaction needs to be made
     createUser(user: string) {
         this.user = user
-        const userFolder = this.getuserFolder()
-        if (fs.existsSync(userFolder)) {
-            console.log(`user ${user} already exists at ${userFolder}`)
+        this.currentPath = this.getuserFolder()
+        if (fs.existsSync(this.currentPath)) {
+            console.log(`user ${user} already exists at ${this.currentPath}`)
         } else {
-            fs.mkdirSync(userFolder)
-            console.log(`made ${userFolder}`)
+            fs.mkdirSync(this.currentPath)
+            console.log(`made ${this.currentPath}`)
         }
         //get transactions in user folder
-        const transactions = this.getTransactionsInFolder(userFolder, txFileNamePrefix)
+        const transactions = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
         if (!transactions || transactions.length === 0) {
             //TODO: look for root transaction
             return false
@@ -33,11 +37,25 @@ export class Folder {
 
     // create a folder and associated metanode
     mkdir(folderName?:string): MetaNode {
-        const folder = `${this.getuserFolder()}${folderName ? '/'+folderName:''}`
+        const folder = path.join(this.currentPath,folderName||'')
+        //const folder = `${}${folderName ? '/'+folderName:''}`
         if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
         const node = new MetaNode(folderName||this.user)
         return node
+    }
+
+    ls() {
+        const folderfiles = fs.readdirSync(this.currentPath)
+        folderfiles.forEach(f => {
+            console.log(f)
+        })
+    }
+    cd(folderName: string) {
+        // start with current directory
+        //apply name
+        this.currentPath = path.join(this.currentPath, folderName)
+        console.log(this.currentPath)
     }
 
     getTransactionsInFolder(folderName: string, startsWith: string) {
