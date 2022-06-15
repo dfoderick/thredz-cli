@@ -2,7 +2,7 @@
 import { Wallet } from "./wallet";
 import { Folder } from "./folder"
 import OpenSPV from 'openspv';
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import { MetaNode } from "./models/meta";
 import constants from "./constants";
 import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'

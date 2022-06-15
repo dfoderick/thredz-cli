@@ -1,6 +1,6 @@
 import OpenSPV from 'openspv';
 import { KeyPair } from "./key";
-import * as fs from "fs";
+import * as fs from "fs-extra";
 import constants from "./constants";
 import { Indexer } from "./indexer";
 

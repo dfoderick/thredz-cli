@@ -26,6 +26,7 @@
   "homepage": "https://github.com/dfoderick/thredz-cli#readme",
   "dependencies": {
     "@moleculer/vorpal": "^1.11.5",
+    "fs-extra": "^10.1.0",
     "hyperswarm": "^2.15.3",
     "long": "^5.2.0",
     "moneystream-wallet": "^0.2.16",
@@ -36,6 +37,7 @@
     "@babel/core": "^7.18.5",
     "@babel/preset-env": "^7.18.2",
     "@babel/preset-typescript": "^7.17.12",
+    "@types/fs-extra": "^9.0.13",
     "@types/jest": "^28.1.1",
     "@types/long": "^4.0.2",
     "@types/node": "^17.0.41",
