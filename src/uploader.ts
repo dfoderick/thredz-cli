@@ -17,6 +17,7 @@ const algorithm = 'SHA512'
 export class Uploader {
     private wallet:Wallet
     private folder:Folder
+    public fee:number = 100
     constructor(wallet: Wallet, folder: Folder) {
         this.wallet = wallet
         this.folder = folder
@@ -49,15 +50,15 @@ export class Uploader {
             const parent = null
             const script = this.metaScript(parent, node)
             node.script = script
-            const metanetTransaction = await this.createTransaction(node)
-            build = metanetTransaction.toString()
-            if (script) this.folder.stageWork(build)
+            const metanetNodeBuilt = await this.createTransaction(node)
+            if (script) this.folder.stageWork(metanetNodeBuilt)
         } else {
-            this.folder.stageWork(Buffer.from(`TODO: this will be a transation\n`))
+            this.folder.stageWork(new MetaNode(`TODO`))
         }
         return {build: build}
     }
 
+    //test a simple spend
     async testSpend(payTo: string) {
         const indexService = new IndexingService()
         const msw: msWallet = new msWallet(new WalletStorage(), indexService)
@@ -68,8 +69,13 @@ export class Uploader {
         console.log(msw._keypair.toAddress().toString())
         const utxos = await msw.loadUnspent()
         console.log(`balance`,msw.balance)
-        const fee = 10
-        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance-fee),undefined,payTo)
+        //TODO: use an estimator
+        let fee = this.fee
+        let buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance),undefined,payTo,fee)
+        if (buildResult.feeActual - buildResult.feeExpected> 10) {
+            // if fees paid is too much then rebuild with better fee
+            buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance),undefined,payTo, buildResult.feeExpected)
+        }
         console.log(`build`, buildResult)
     }
 
@@ -90,15 +96,20 @@ export class Uploader {
         if (msw.balance === 0) {
             throw new Error(`No funds available`)
         }
-        const fee = 100 //TODO: estimate fees
+        let fee = this.fee //TODO: estimate fees
         //payTo can be script
         const payTo = Script.fromSafeDataArray(node.script) //new Script(node.script)
         console.log(`script for meta node has`, payTo.chunks.length,`chunks`)
         //data will get added if payto is a Script object
-        const buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,fee)
-        //msw.addData
-        // const buildResult = await msw.makeStreamableCashTx(Long.fromNumber(0),
-        // payTo, false,undefined, undefined)
+        let buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,fee)
+        if (buildResult.feeActual - buildResult.feeExpected > 10) {
+            //msw.logDetailsLastTx()
+            //TODO: find a cleaner way to unspend the wallet utxo
+            msw.clear()
+            await msw.tryLoadWalletUtxos()
+            console.log(`fees`, buildResult.feeActual, buildResult.feeExpected)
+            buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,buildResult.feeExpected)
+        }
         // console.log(`build`, buildResult)
         msw.logDetailsLastTx()
         //console.log(buildResult.tx.txOuts[0])
@@ -110,8 +121,11 @@ export class Uploader {
             console.log(`      media size x 2`, (node.content?.length||0)*2)
         }
         console.log(`    transaction size`, buildResult.hex.length)
-        node.transactionId = buildResult?.txId
+        //console.log(`transaction`, buildResult)
+        node.transactionId = buildResult?.tx?.hash().toString('hex')
         node.hex = buildResult.hex
+        node.fee = buildResult.feeActual
+        node.feeExpected = buildResult.feeExpected
         //todo: save additional build result info???
         return node
     }

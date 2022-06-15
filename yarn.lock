@@ -2208,9 +2208,9 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
-"bsv@https://github.com/moneystreamdev/bsv":
+"bsv@git+https://github.com/moneystreamdev/bsv.git":
   version "2.0.0-beta.39"
-  resolved "https://github.com/moneystreamdev/bsv#ee42a6ac323d74de36f277d8c8728193c29c84cf"
+  resolved "git+https://github.com/moneystreamdev/bsv.git#ee42a6ac323d74de36f277d8c8728193c29c84cf"
   dependencies:
     aes "0.1.0"
     bitcoin-elliptic "^7.0.1"
@@ -5338,10 +5338,10 @@ mkdirp@^0.5.1, mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.6"
 
-moneystream-wallet@^0.2.15:
-  version "0.2.15"
-  resolved "https://registry.yarnpkg.com/moneystream-wallet/-/moneystream-wallet-0.2.15.tgz#614e58e2578da18fc40ac0ed5c2e9f0b21123bd9"
-  integrity sha512-SfBiXL5dGT3zwD5IILqaKlA6mUYDL2yTKv2LtKanH2cotqajbY8v6HHdjh0fiAjAt07YsG5FxTQhZVHJZmAC3w==
+moneystream-wallet@^0.2.16:
+  version "0.2.16"
+  resolved "https://registry.yarnpkg.com/moneystream-wallet/-/moneystream-wallet-0.2.16.tgz#b4fc5d94cfbc2f8ee4d885bbe1e982e588bae05f"
+  integrity sha512-B01+si7BX84XXGGocvvd5y8ljmGeIBuKXwx5HTovBm50NAu7lXz2qyA2yygtbCkzADXHTwVrgqGHhAS3ebuDQw==
   dependencies:
     "@types/crypto-js" "^3.1.47"
     "@types/node-fetch" "^2.5.7"

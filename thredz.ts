@@ -122,8 +122,8 @@ vorpal
     .command('status', 'shows pending commits')
     .option("-d, --details", "detail output")
     .action(wrapTryCatch(async ({ options }: any) => {
-            folder.checkCommitsPending(options.details?true:false)
-        }));
+        folder.checkCommitsPending(options.details?true:false)
+    }));
 
 vorpal
     .command('upload <filename>', 'upload a file to metanet')

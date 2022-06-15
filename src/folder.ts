@@ -28,7 +28,7 @@ export class Folder {
             //TODO: look for root transaction
             return false
         }
-        return true
+        return false //true
     }
 
     // create a folder and associated metanode
@@ -98,15 +98,19 @@ export class Folder {
 
     dumpFileContents(fileName:string, isCountOnly = false): number {
         const contents = this.getfileContents(fileName)
-        // console.log(`it`, contents[0])
         if (contents[0] == 91) {
             const jcontents = JSON.parse(contents.toString())
-            if (!isCountOnly) console.log(jcontents)
+            if (!isCountOnly) this.visualizeCommits(jcontents)
             return jcontents.length
         } else {
             console.log(contents.toString())
             return NaN
         }
+    }
+    visualizeCommits(jcontents:any[]) {
+        console.log(jcontents.map(commit => {
+            return {...commit,overPaid:commit.fee - commit.feeExpected}
+        }))
     }
     cancel() {
         if (this.isPendingCommit()){

@@ -14,13 +14,16 @@ export class MetaNode {
     keyPath: string = constants.META_DERIVATION_PATH
     // script chunks that will be written to the transaction
     script: any[] = []
-    // transaction where code is stored in metanet
-    transactionId: string = ''
     // child nodes
     children: MetaNode[] = []
 
+    // transaction where code is stored in metanet
+    transactionId: string = ''
     // built hex for the transaction
     hex: string = ''
+    fee?: number
+    // expected fee based on transaction size. should be close to fee
+    feeExpected?: number
 
     constructor(name:string) {
         this.name = name
