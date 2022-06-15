@@ -1,16 +1,12 @@
 import { Wallet } from "./src/wallet";
 import { Uploader } from './src/uploader'
 import { Folder } from './src/folder'
-import { startup } from './src/utils'
-
-import hyperswarm from 'hyperswarm'
-//const hyperswarm = require('hyperswarm')
-import crypto from 'crypto'
+import { logGreen, startup } from './src/utils'
 
 import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils";
-import { Socket } from "net";
 import { MetaNode } from "./src/models/meta";
+import { p2p } from "./src/p2p";
 export const vorpal = new Vorpal();
 
 let wallet = new Wallet()
@@ -24,29 +20,15 @@ startup()
 const nameForDomain = `User Folder`
 
 //swarm
-const topic = crypto.createHash('sha256')
-  .update('thredz')
-  .digest()
-const swarm = hyperswarm()
-swarm.join(topic, {
-    lookup: true, // find & connect to peers
-    announce: true // optional- announce self as a connection target
-})
-
-let swarmSocket:Socket
-swarm.on('connection', (socket:any, info:any) => {
-    swarmSocket = socket
-    // info is a PeerInfo
-    console.log('new connection', info.status)
-    socket.on('data', (data:any) => console.log('client got message:', data.toString()))
-    // you can now use the socket as a stream, eg:
-    // process.stdin.pipe(socket).pipe(process.stdout)
+const swarm = new p2p()
+swarm.on('data', (data:any) => {
+    logGreen(`got message:`, data.toString())    
 })
 
 vorpal
     .command('send <message>', 'send a message')
     .action(wrapTryCatch(async ({ message }: { message: string }) => {
-        swarmSocket?.write(message)
+        swarm.socket?.write(message)
     }));
 
 vorpal

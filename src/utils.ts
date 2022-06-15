@@ -79,13 +79,13 @@ import type Vorpal from "@moleculer/vorpal";
 //   }
 // };
 
-// export const logGreen = (msg: string) => {
-//   console.log(chalk.green(msg));
-// };
+export const logGreen = (msg: string, more?: any) => {
+  console.log(chalk.green(msg,more));
+};
 
-// export const logYellow = (msg: string) => {
-//   console.log(chalk.yellow(msg));
-// };
+export const logYellow = (msg: string) => {
+  console.log(chalk.yellow(msg));
+};
 
 export const logRed = (msg: string) => {
   console.log(chalk.red(msg));
