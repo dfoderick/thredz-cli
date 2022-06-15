@@ -1,8 +1,7 @@
-// import OpenSPV from 'openspv'
-// console.log(OpenSPV.PrivKey)
 import { Wallet } from "./src/wallet";
 import { Uploader } from './src/uploader'
 import { Folder } from './src/folder'
+import { startup } from './src/utils'
 
 import hyperswarm from 'hyperswarm'
 //const hyperswarm = require('hyperswarm')
@@ -14,9 +13,6 @@ import { Socket } from "net";
 import { MetaNode } from "./src/models/meta";
 export const vorpal = new Vorpal();
 
-// const arg1 = process.argv[1]
-// const arg2 = process.argv[2]
-// let arg3
 let wallet = new Wallet()
 wallet = wallet.load()
 const folder = new Folder()
@@ -24,6 +20,7 @@ folder.user = wallet.user
 const uploader = new Uploader(wallet, folder)
 console.log(`Current Directory ${folder.cwd}`)
 console.log(`Current User ${wallet.user}[${wallet.AddressMeta}] at ${folder.getuserFolder()}`)
+startup()
 const nameForDomain = `User Folder`
 
 //swarm

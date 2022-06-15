@@ -87,6 +87,10 @@ import type Vorpal from "@moleculer/vorpal";
 //   console.log(chalk.yellow(msg));
 // };
 
+export const logRed = (msg: string) => {
+  console.log(chalk.red(msg));
+};
+
 // export const logBlue = (msg: string) => {
 //   console.log(chalk.blueBright(msg));
 // };
@@ -132,3 +136,10 @@ export function wrapTryCatch(fn: Function) {
 // export function getBootCommand() {
 //   return process.argv.slice(2).join(' ');
 // }
+
+export function startup() {
+  const version = parseInt(process.versions.node.split('.')[0],10)
+  if (version <14) {
+    logRed(`Your node version ${version} needs to be upgraded to version 16 or above!`)
+  }
+}
