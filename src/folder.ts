@@ -47,8 +47,10 @@ export class Folder {
         //const folder = `${}${folderName ? '/'+folderName:''}`
         if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
+        this.currentPath = folder
         //find or create node
         const node = new MetaNode(folderName||this.user)
+        //TODO: write the node
         return node
     }
 
@@ -147,6 +149,7 @@ export class Folder {
         // save the rest
         const jnotsaved = jcommits.filter((c:any) => !c.saved)
         fs.writeFileSync(this.getcommitFileName(), JSON.stringify(jnotsaved))
+        console.log(`wrote`, this.getcommitFileName())
     }
 
     //true if transaction was broadcast correctly

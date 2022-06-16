@@ -46,8 +46,7 @@ export class Uploader {
         const test = true
         if (test) {
             //TODO use parent if subdirectory
-            const parent = null
-            const script = this.metaScript(parent, node)
+            const script = this.metaScript(node)
             node.script = script
             const metanetNodeBuilt = await this.createTransaction(node)
             if (script) this.folder.stageWork(metanetNodeBuilt)
@@ -157,7 +156,7 @@ export class Uploader {
     }
 
     // build script for child node
-    metaScript(parent: MetaNode|null, child: MetaNode) {
+    metaScript(child: MetaNode) {
         //const digest = OpenSPV.Hash.sha512(child.content)
         const encoding = ' '
         const mediaType = ' '
@@ -169,7 +168,7 @@ export class Uploader {
         //   [Filename]
         // array elements should be buffer, string or number
         const opr: any[] = [
-            ...this.metaPreamble(parent, child),
+            ...this.metaPreamble(child),
             // '|',
             // this.dipProtocolTag,
             // this.algorithm,
@@ -192,17 +191,17 @@ export class Uploader {
     }
 
     // metanet protocol scripts
-    metaPreamble(parent: MetaNode|null, child: MetaNode): string[] {
+    metaPreamble(child: MetaNode): string[] {
         const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
         //console.log(`DERIVED`,derivedKey)
         if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
-        if (parent && !parent.transactionId) {
+        if (child.parent && !child.parent.transactionId) {
             throw new Error(`Parent node must have a transactionId`)
         }
         return [
             constants.META_PROTOCOL, 
             derivedKey?.Address.toString(),
-            parent === null ? 'NULL' : parent.transactionId
+            child?.parent?.transactionId || 'NULL' 
         ]
     }
     // returns script data as array of hex buffers that Script wants

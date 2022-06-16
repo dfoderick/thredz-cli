@@ -57,7 +57,7 @@ vorpal
         const alreadyExists = folder.createUser(name)
         if (!alreadyExists) {
             const root: MetaNode = folder.mkdir()
-            const script = uploader.metaScript(null, root)
+            const script = uploader.metaScript(root)
             console.log(root)
             root.script = script
             const metanetNodeBuilt = await uploader.createTransaction(root)
@@ -114,7 +114,18 @@ vorpal
 vorpal
     .command('mkdir <name>', 'create a directory/folder')
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
-        folder.mkdir(name)
+        const parent = folder.currentNode
+        const newNode = folder.mkdir(name)
+        //TODO: find the node with parent intact
+        newNode.parent = parent || null
+        const script = uploader.metaScript(newNode)
+        console.log(newNode)
+        newNode.script = script
+        const metanetNodeBuilt = await uploader.createTransaction(newNode)
+        console.log(metanetNodeBuilt)
+        // TODO: transaction was created in parent, not subfolder
+        if (script) folder.stageWork(metanetNodeBuilt)
+
     }));
 vorpal
     .command('cd <dir>', 'change directory')
