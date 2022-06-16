@@ -135,26 +135,35 @@ vorpal
     
 vorpal
     .command('ls', 'show files and objects in a folder')
-    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+    .action(wrapTryCatch( () => {
         folder.ls()
     }));
 
 vorpal
     .command('tree', 'show current and child folders')
-    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+    .action(wrapTryCatch(() => {
         folder.tree()
     }));
 
 vorpal
     .command('val', 'validate folder structure')
-    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+    .action(wrapTryCatch(() => {
         folder.validate()
     }));
 
 vorpal
     .command('backup', 'backup users folder')
-    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+    .action(wrapTryCatch(() => {
         folder.backup()
+    }));
+
+vorpal
+    .command('traverse', 'test traversal through folder tree')
+    .action(wrapTryCatch(() => {
+        const results = folder.traverse(undefined, undefined, (f:any) => {
+            console.log(`traverse`, f)
+        })
+        //console.log(results)
     }));
 
 vorpal

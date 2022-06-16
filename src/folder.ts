@@ -55,18 +55,17 @@ export class Folder {
         return node
     }
 
-    ls(fileName?: string) {
+    ls(fileName?: string, filterFileName?:string) {
         const newPath = path.join(this.currentPath, fileName||'')
         const folderfiles = fs.readdirSync(newPath)
         const subfolders: string[] = []
         folderfiles.forEach(f => {
             const stats = fs.statSync(path.resolve(newPath, f))
-            //console.log(`stats`, stats)
             if (stats.isDirectory()) {
                 console.log(`/`, f)
                 subfolders.push(f)
             } else {
-                console.log(fileName? `/${fileName}/`:'', f)
+                if (!filterFileName || f.startsWith(filterFileName) )console.log(fileName? `/${fileName}/`:'', f)
             }
         })
         return subfolders
@@ -80,19 +79,17 @@ export class Folder {
     }
 
     findCurrentNode(): MetaNode|undefined {
-        //console.log(`TODO: FIND CURRENT NODE`)
         const txns = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
         const ourFolder = path.basename(this.currentPath)
         const ourNode = txns?.find(t => {return t.name === ourFolder})
-        //console.log(`txns`, ourFolder, ourNode)
         return ourNode
     }
 
-    tree() {
+    tree(filterFileName?:string) {
         // recursive ls
         const subfolders = this.ls()
         subfolders.forEach(f => {
-            this.ls(f)
+            this.ls(f, filterFileName)
         })
     }
 
@@ -220,5 +217,27 @@ export class Folder {
         } else {
             console.log(`No pending commits ${commits}`)
         }
+    }
+    //traverse folder structure
+    traverse(fileName?: string, filterFileName?:string, visit?: any) {
+        const newPath = path.join(this.currentPath, fileName||'')
+        const folderfiles = fs.readdirSync(newPath)
+        let filesResult: string[] = []
+        folderfiles.forEach(f => {
+            const fullfile = path.resolve(newPath, f)
+            const stats = fs.statSync(fullfile)
+            if (stats.isDirectory()) {
+                filesResult = [...filesResult,...this.traverse(f, filterFileName, visit)]
+            } else {
+                if (!filterFileName || f.startsWith(filterFileName)) {
+                    filesResult.push(fullfile)
+                    if (visit) {
+                        visit(f)
+                    }
+                }
+                //console.log(fileName? `/${fileName}/`:'', f)
+            }
+        })
+        return filesResult
     }
 }
