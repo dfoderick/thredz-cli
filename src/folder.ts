@@ -16,6 +16,11 @@ export class Folder {
     //todo: recursively find commits
     getcommitFileName() { return `${this.currentPath}/${commitsFileName}` }
     getTransactionFileName(txid:string) { return `${this.currentPath}/${txFileNamePrefix}${txid}` }
+
+    constructor() {
+        if (!fs.existsSync(this.userRoot)) fs.mkdirSync(this.userRoot)
+    }
+
     // creates a folder under /users and a root metanet transaction
     // returns false if transaction needs to be made
     createUser(user: string) {
@@ -92,6 +97,14 @@ export class Folder {
     }
 
     getTransactionsInFolder(folderName: string, startsWith?: string) {
+        if (!fs.existsSync(folderName)) {
+            try {
+                fs.mkdirSync(folderName)
+            } catch (err) {
+                console.log(`error`, err)
+            }
+            return null
+        }
         const folderfiles = fs.readdirSync(folderName)
         let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
         const transactions:any[] = []
