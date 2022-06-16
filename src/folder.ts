@@ -73,14 +73,16 @@ export class Folder {
         //this should be the only place where currentPath is set
         this.currentPath = path.join(this.currentPath, folderName)
         this.currentNode = this.findCurrentNode()
-        console.log(`CD current`,this.currentPath)
+        console.log(`current`,this.currentNode?.transactionId)
     }
 
     findCurrentNode(): MetaNode|undefined {
         //console.log(`TODO: FIND CURRENT NODE`)
-        const txns = this.getTransactionsInFolder(this.currentPath)
-        //console.log(`txns`, txns)
-        return undefined
+        const txns = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
+        const ourFolder = path.basename(this.currentPath)
+        const ourNode = txns?.find(t => {return t.name === ourFolder})
+        //console.log(`txns`, ourFolder, ourNode)
+        return ourNode
     }
 
     tree() {
@@ -112,6 +114,7 @@ export class Folder {
             const stats = fs.statSync(path.resolve(folderName, f))
             if (!stats.isDirectory()) {
                 const contents = this.getfileContents(folderName+'/'+f)
+                //TODO: validate that contents are json
                 transactions.push(JSON.parse(contents.toString()))
             }
         })
