@@ -92,7 +92,6 @@ export class Folder {
     }
 
     getTransactionsInFolder(folderName: string, startsWith?: string) {
-        //TODO: read only files, not folders
         const folderfiles = fs.readdirSync(folderName)
         let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
         const transactions:any[] = []
@@ -144,7 +143,7 @@ export class Folder {
     // store the commit under the transactionid
     storeTransaction(commit:any) {
         if (commit.broadcast && this.isValidBroadcast(commit.broadcast)) {
-            //TODO: validate broadcast txn and store in file
+            //validate broadcast txn and store in file
             // example broadcat: 123d27dc4a5024e87178e0d6e7dee476c114d928a627a27be5ce9840ccf18a72
             fs.writeFileSync(this.getTransactionFileName(commit.broadcast), JSON.stringify(commit))
             commit.saved = commit.broadcast

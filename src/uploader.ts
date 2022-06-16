@@ -29,7 +29,6 @@ export class Uploader {
         return {success: true, result: build}
     }
 
-    //TODO:
     async makeTransaction(fileName:string, content: Buffer) {
         console.log(`content`, content.length)
         //TODO: test encrypt and decrypt
