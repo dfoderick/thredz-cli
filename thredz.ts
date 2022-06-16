@@ -150,7 +150,13 @@ vorpal
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         folder.validate()
     }));
-    
+
+vorpal
+    .command('backup', 'backup users folder')
+    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+        folder.backup()
+    }));
+
 vorpal
   .delimiter(`thredz$\\\\${wallet.user}\\`)
   .show();

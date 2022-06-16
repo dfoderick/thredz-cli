@@ -8,6 +8,7 @@ const txFileNamePrefix = '.thredz.tx.'
 export class Folder {
     user: string = ''
     userRoot = `./users/`
+    backupRoot = `./backup/`
     // the curent user path
     currentPath = this.userRoot
     currentNode?: MetaNode
@@ -93,6 +94,10 @@ export class Folder {
         subfolders.forEach(f => {
             this.ls(f)
         })
+    }
+
+    backup() {
+        fs.copySync(this.userRoot, this.backupRoot)
     }
 
     validate() {

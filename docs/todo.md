@@ -16,13 +16,12 @@ use bitcoin script, superscript, or any compatible language to transform and ope
 * 
 
 # thredz todo
-* fee estimator, it does an ajustment now, in 2 builds
-* create tx with parent
 * check keyPath on parent/child
 * recurse commits
-* metanet indexing for a database? check with metacache
 * make an example of document versioning
+* metanet indexing for a database? check with metacache
 * make a db for storing transaction locally
+* fee estimator, it does an ajustment now, in 2 builds
 *
 * p2p pub/sub
 * 
