@@ -10,6 +10,7 @@ export class Folder {
     userRoot = `./users/`
     // the curent user path
     currentPath = this.userRoot
+    currentNode?: MetaNode
     get cwd() { return process.cwd() }
     getuserFolder() { return `${this.userRoot}${this.user}` }
     //todo: recursively find commits
@@ -41,37 +42,73 @@ export class Folder {
         //const folder = `${}${folderName ? '/'+folderName:''}`
         if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
+        //find or create node
         const node = new MetaNode(folderName||this.user)
         return node
     }
 
-    ls() {
-        const folderfiles = fs.readdirSync(this.currentPath)
+    ls(fileName?: string) {
+        const newPath = path.join(this.currentPath, fileName||'')
+        const folderfiles = fs.readdirSync(newPath)
+        const subfolders: string[] = []
         folderfiles.forEach(f => {
-            console.log(f)
+            const stats = fs.statSync(path.resolve(newPath, f))
+            //console.log(`stats`, stats)
+            if (stats.isDirectory()) {
+                console.log(`/`, f)
+                subfolders.push(f)
+            } else {
+                console.log(fileName? `/${fileName}/`:'', f)
+            }
         })
-    }
-    cd(folderName: string) {
-        // start with current directory
-        //apply name
-        this.currentPath = path.join(this.currentPath, folderName)
-        console.log(this.currentPath)
+        return subfolders
     }
 
-    getTransactionsInFolder(folderName: string, startsWith: string) {
+    cd(folderName: string) {
+        //this should be the only place where currentPath is set
+        this.currentPath = path.join(this.currentPath, folderName)
+        this.currentNode = this.findCurrentNode()
+        console.log(`CD current`,this.currentPath)
+    }
+
+    findCurrentNode(): MetaNode|undefined {
+        //console.log(`TODO: FIND CURRENT NODE`)
+        const txns = this.getTransactionsInFolder(this.currentPath)
+        //console.log(`txns`, txns)
+        return undefined
+    }
+
+    tree() {
+        // recursive ls
+        const subfolders = this.ls()
+        subfolders.forEach(f => {
+            this.ls(f)
+        })
+    }
+
+    validate() {
+        // validate that .thredz.tx match the directory structure
+        console.log(`TODO:`)
+    }
+
+    getTransactionsInFolder(folderName: string, startsWith?: string) {
+        //TODO: read only files, not folders
         const folderfiles = fs.readdirSync(folderName)
         let files = folderfiles.filter( function( elm ) {return !startsWith || elm.startsWith(startsWith)});
         const transactions:any[] = []
         files.forEach(f => {
-            const contents = this.getfileContents(folderName+'/'+f)
-            transactions.push(JSON.parse(contents.toString()))
+            const stats = fs.statSync(path.resolve(folderName, f))
+            if (!stats.isDirectory()) {
+                const contents = this.getfileContents(folderName+'/'+f)
+                transactions.push(JSON.parse(contents.toString()))
+            }
         })
         return transactions
     }
 
     getfileContents(fileName:string) {
         const contents = fs.readFileSync(fileName)
-        console.log(fileName)
+        //console.log(`got`,fileName)
         return contents
     }
 

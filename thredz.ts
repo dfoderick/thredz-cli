@@ -127,6 +127,18 @@ vorpal
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         folder.ls()
     }));
+
+vorpal
+    .command('tree', 'show current and child folders')
+    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+        folder.tree()
+    }));
+
+vorpal
+    .command('val', 'validate folder structure')
+    .action(wrapTryCatch(async ({ name }: { name: string }) => {
+        folder.validate()
+    }));
     
 vorpal
   .delimiter(`thredz$\\\\${wallet.user}\\`)

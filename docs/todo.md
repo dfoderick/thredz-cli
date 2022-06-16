@@ -10,27 +10,24 @@ store many types of media or data files
 create relationships between thredz
 mint nft and access tokens
 use any compatible smart contract or token system (initially stas)
-use bitcoin script, CATN8 superscrpt, or any compatible language to transform and operate on your thredz
+use bitcoin script, superscript, or any compatible language to transform and operate on your thredz
 
 # questions
 * 
 
 # thredz todo
-* fee estimator
-* mkdir, root, maintain folder structure
-* metanet indexing for a database? how to cache??? check with metacache
+* fee estimator, it does an ajustment now, in 2 builds
+* find parent
+* create tx with parent
+* recurse commits
+* metanet indexing for a database? check with metacache
 * make an example of document versioning
 * make a db for storing transaction locally
+*
+* p2p pub/sub
 * 
-
 * provider for contracting at layer 2. script, catn8, run, js, forth, etc...
 * scrypt for layer 1
-
-* node4j?
-* look for web ui for showing and adding nodes
-https://github.com/uber/react-digraph
-https://github.com/lempiy/react-direct-graph
-* create ui with db back end
 
 ## node types
 * root node
