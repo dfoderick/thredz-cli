@@ -1,23 +1,11 @@
-# tag line
-the interface to metanet
-with thredz you can...
-create, organize, store, mint, control, publish, share, collaborate
-you own all your data
-you decide what and how to publish
-
-take your keys and reconstitute your thredz in your own application
-store many types of media or data files
-create relationships between thredz
-mint nft and access tokens
-use any compatible smart contract or token system (initially stas)
-use bitcoin script, superscript, or any compatible language to transform and operate on your thredz
-
 # questions
 * 
 
 # thredz todo
+* b format for folders? how to encode type of node in node structure
+* pull/read command
+* test decrypt encrypted media node
 * check keyPath on parent/child
-* recurse commits
 * make an example of document versioning
 * metanet indexing for a database? check with metacache
 * make a db for storing transaction locally
@@ -35,8 +23,22 @@ use bitcoin script, superscript, or any compatible language to transform and ope
 * license node
 * media node
 * nft/token node
-* payments nodes
+* invoices/payments nodes
 
-## ideas
+## more
 * script library with monetized usage
 * monetize mint
+
+# tag line
+the interface to metanet
+with thredz you can...
+create, organize, store, mint, control, publish, share, collaborate
+you own all your data
+you decide what and how to publish
+
+take your keys and reconstitute your thredz in your own application
+store many types of media or data files
+create relationships between thredz
+mint nft and access tokens
+use any compatible smart contract or token system (initially stas)
+use bitcoin script, superscript, or any compatible language to transform and operate on your thredz

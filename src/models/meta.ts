@@ -5,7 +5,9 @@ import constants from '../constants'
 // serialized to local file or database
 export class MetaNode {
     // the parent owner node, null if root domain
-    parent: MetaNode | null = null
+    parent: MetaNode|null =  null
+    //TODO: link to the previous version of this MetanetNode
+    previousVersion: MetaNode|null = null
     // name of node contents, should be unique in folder, like a file name
     name: string = ''
     // node contents can be name of directory or file

@@ -117,9 +117,10 @@ vorpal
         const parent = folder.currentNode
         const newNode = folder.mkdir(name)
         //TODO: find the node with parent intact
-        newNode.parent = parent || null
+        newNode.parent = parent
         const script = uploader.metaScript(newNode)
         console.log(newNode)
+        //TODO: refactor to buildandstage
         newNode.script = script
         const metanetNodeBuilt = await uploader.createTransaction(newNode)
         console.log(metanetNodeBuilt)
@@ -164,6 +165,12 @@ vorpal
             console.log(`traverse`, f)
         })
         //console.log(results)
+    }));
+
+vorpal
+    .command('node <filename> <contents>', 'create a node with contents')
+    .action(wrapTryCatch(async ({ filename, contents }: { filename: string, contents:string }) => {
+        const node = await uploader.createTextNode(filename, contents)
     }));
 
 vorpal

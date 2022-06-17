@@ -11,7 +11,7 @@ export class Folder {
     backupRoot = `./backup/`
     // the curent user path
     currentPath = this.userRoot
-    currentNode?: MetaNode
+    currentNode: MetaNode|null = null
     get cwd() { return process.cwd() }
     getuserFolder() { return `${this.userRoot}${this.user}` }
     //todo: recursively find commits
@@ -78,7 +78,7 @@ export class Folder {
         console.log(`current`,this.currentNode?.transactionId)
     }
 
-    findCurrentNode(): MetaNode|undefined {
+    findCurrentNode(): MetaNode|null {
         const txns = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
         const ourFolder = path.basename(this.currentPath)
         const ourNode = txns?.find(t => {return t.name === ourFolder})

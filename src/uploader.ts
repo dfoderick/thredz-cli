@@ -14,6 +14,8 @@ const bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
 
+//TODO: its more than an uploader. Its a general node processor
+// create media and text nodes and other types of nodes
 export class Uploader {
     private wallet:Wallet
     private folder:Folder
@@ -46,10 +48,9 @@ export class Uploader {
         const test = true
         if (test) {
             //TODO use parent if subdirectory
-            const script = this.metaScript(node)
-            node.script = script
+            node.script = this.metaScript(node)
             const metanetNodeBuilt = await this.createTransaction(node)
-            if (script) this.folder.stageWork(metanetNodeBuilt)
+            if (node.script) this.folder.stageWork(metanetNodeBuilt)
         } else {
             this.folder.stageWork(new MetaNode(`TODO`))
         }
@@ -216,4 +217,25 @@ export class Uploader {
             return Buffer.from(a.toString('hex'))
         })
     }
+
+    // create a content node
+    async createTextNode(filename: string, contents: string) {
+        // make node
+        const node = new MetaNode(filename)
+        node.parent = this.folder.currentNode
+        //TODO: encrypt or not?
+        node.content = Buffer.from(contents)
+        // store the transaction
+        const built = await this.buildAndStage(node)
+        //console.log(`NODE`, node)
+        return built
+    }
+
+    async buildAndStage(node:MetaNode) {
+        node.script = this.metaScript(node)
+        const metanetNodeBuilt = await this.createTransaction(node)
+        if (node.script) this.folder.stageWork(metanetNodeBuilt)
+        return metanetNodeBuilt
+    }
+
 }

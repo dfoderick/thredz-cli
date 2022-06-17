@@ -9,7 +9,7 @@ test('generates a root script', () => {
     folder.user="dave"
     const uploader = new Uploader(wallet, folder)
     const node: MetaNode = new MetaNode(folder.getuserFolder())
-    const script = uploader.metaScript(null, node)
+    const script = uploader.metaScript(node)
     console.log(script)
     expect(script).toBeDefined()
     expect(script[2].toString()).toBe('NULL')
@@ -24,7 +24,7 @@ test('generates a root script', () => {
     parent.transactionId = "PARENTTRANSACTIONID" //TODO: should get txid from folder
     const child: MetaNode = folder.mkdir('subfolder')
     child.parent = parent
-    const script = uploader.metaScript(parent, child)
+    const script = uploader.metaScript(child)
     console.log(script)
     expect(script).toBeDefined()
     expect(script[2].toString()).toBe('PARENTTRANSACTIONID')
