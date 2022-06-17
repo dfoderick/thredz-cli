@@ -53,6 +53,26 @@ thredz$\\dave\ help
     mkdir <name>       create a directory/folder
 ```
 
+# example session
+Here is an example thredz session that will create some nodes and store them on a blockchain. The `status` command allows you to preview the transaction and fees before attempting to write it to the blockchain using the `commit` command. A pending commit can be `cancel` to undo the pending commit.
+```
+user dave       // create a user directory
+status          // see 1 commit pending
+commit          // store the root user folder on blockchain
+mkdir media     // create a media subfolder
+status          // see 1 commit pending
+commit          // store the subfolder
+upload ../media/bun33s.mp4  // encrypt the media transaction
+status
+commit          // store the media to chain
+node text hello.txt 'Hello Thredz'   // create a text file in the current directory
+ls              // see files in current folder
+status
+commit
+tree            // see all files in current folder and subfolder
+```
+
+
 # Dev notes
 When importing use .js
 ```
