@@ -20,6 +20,7 @@ export class Uploader {
     private wallet:Wallet
     private folder:Folder
     public fee:number = 100
+    indexService: IndexingService = new IndexingService()
     constructor(wallet: Wallet, folder: Folder) {
         this.wallet = wallet
         this.folder = folder
@@ -59,8 +60,7 @@ export class Uploader {
 
     //test a simple spend
     async testSpend(payTo: string) {
-        const indexService = new IndexingService()
-        const msw: msWallet = new msWallet(new WalletStorage(), indexService)
+        const msw: msWallet = new msWallet(new WalletStorage(), this.indexService)
         const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
         //const wif = this.wallet.PrivateKeyLegacy?.toWif()
         console.log(`wif`, wif)
@@ -79,8 +79,7 @@ export class Uploader {
     }
 
     getMoneyStreamWallet() {
-        const indexService = new IndexingService()
-        const msw: msWallet = new msWallet(new WalletStorage(), indexService)
+        const msw: msWallet = new msWallet(new WalletStorage(), this.indexService)
         const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
         msw.loadWallet(wif)
         //msw.logDetails()
@@ -140,10 +139,9 @@ export class Uploader {
         const commits = this.folder.getCommits()
         const committed = []
         if (commits) {
-            const indexService = new IndexingService()
             for (let i =0; i< commits.length; i++) {
                 // example result: 123d27dc4a5024e87178e0d6e7dee476c114d928a627a27be5ce9840ccf18a72
-                const broadcastResult = await indexService.broadcastRaw(commits[i].hex)
+                const broadcastResult = await this.indexService.broadcastRaw(commits[i].hex)
                 console.log(`broadcast`,broadcastResult)
                 // if broadcast success then mark this commit and store the txn
                 commits[i].broadcast = broadcastResult

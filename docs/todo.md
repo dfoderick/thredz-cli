@@ -3,7 +3,7 @@
 
 # thredz todo
 * b format for folders? how to encode type of node in node structure
-* pull/read command
+* pull/read/clone command
 * test decrypt encrypted media node
 * check keyPath on parent/child
 * make an example of document versioning

@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Wallet } from "./src/wallet";
 import { Uploader } from './src/uploader'
 import { Folder } from './src/folder'
@@ -7,6 +8,7 @@ import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils";
 import { MetaNode } from "./src/models/meta";
 import { p2p } from "./src/p2p";
+import { Indexer } from "./src/indexer";
 export const vorpal = new Vorpal();
 
 let wallet = new Wallet()
@@ -174,5 +176,32 @@ vorpal
     }));
 
 vorpal
-  .delimiter(`thredz$\\\\${wallet.user}\\`)
+    .command('clone', 'download metanet hierarchy')
+    .option('-t','transaction id')
+    .action(wrapTryCatch(async ({ options }: any) => {
+        //get root transaction
+        // const tx = await uploader.indexService.getApiTxJSON(options.t||'f986f16eaf6a853ec4eee41955074713cc49a2e476433ce6fdc6ae9c11f0c3a1')
+        // //console.log(tx)
+        // // asm, hex
+        // console.log(tx.vout[0].scriptPubKey)
+        // //type:metanet
+        // console.log(tx.vout[0].scriptPubKey.opReturn)
+
+        // console.log(`options`, options)
+        const indexer = new Indexer()
+        const history = await indexer.history()
+        console.log(history)
+    }));
+
+    vorpal
+    .command('metanet', 'recent metanet history')
+    .option('-t','transaction id')
+    .action(wrapTryCatch(async ({ options }: any) => {
+        const indexer = new Indexer()
+        const metanet = await indexer.metanet()
+        console.log(metanet)
+    }));
+
+vorpal
+  .delimiter(`thredz$\\\\${folder.currentPath}\\`)
   .show();

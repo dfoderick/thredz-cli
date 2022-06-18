@@ -4,3 +4,4 @@ dist
 users/*
 backup/*
 yarn.error.log
+.env

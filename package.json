@@ -26,6 +26,7 @@
   "homepage": "https://github.com/dfoderick/thredz-cli#readme",
   "dependencies": {
     "@moleculer/vorpal": "^1.11.5",
+    "dotenv": "^16.0.1",
     "fs-extra": "^10.1.0",
     "hyperswarm": "^2.15.3",
     "long": "^5.2.0",

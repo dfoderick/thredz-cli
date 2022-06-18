@@ -53,4 +53,50 @@ export class Indexer {
     return txid;
   }
 
+
+  async history() {
+    const query = {
+      q: {
+        find: { "out.s2": "19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut", "blk.i": { "$gt": 609000 } },
+        limit: 1,
+        sort: { "blk.i": 1 },
+        project: { "blk": 1, "tx.h": 1, "out.s4": 1, "out.o1": 1 }
+      }
+    };
+    const fq = await fetch("https://txo.bitbus.network/block", {
+      method: "post",
+      headers: { 
+        'Content-type': 'application/json; charset=utf-8',
+        token: process.env.UNWRITER_TOKEN||''
+      },
+      body: JSON.stringify(query)
+    })
+    const result = await fq.text()
+    return result
+  }
+
+  async metanet(startingBlock: number = 744000) {
+    const query = {
+      q: {
+        //find: { "out.s2": "meta","out.s5": "dave", "blk.i": { "$gt": startingBlock } },
+        find: { "out.s2": "meta", "blk.i": { "$gt": startingBlock } },
+        limit: 100,
+        sort: { "blk.i": 1 },
+        project: { "tx.h": 1, "out.s3": 1, "out.s4": 1, "out.s5": 1 }
+//        project: { "blk": 1, "tx.h": 1, "out.s4": 1, "out.o1": 1 }
+      }
+    };
+    const fq = await fetch("https://txo.bitbus.network/block", {
+      method: "post",
+      headers: { 
+        'Content-type': 'application/json; charset=utf-8',
+        token: process.env.UNWRITER_TOKEN||''
+      },
+      body: JSON.stringify(query)
+    })
+    const result = await fq.text()
+    return result
+  }
+
+
 }
