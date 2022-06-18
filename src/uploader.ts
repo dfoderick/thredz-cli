@@ -39,6 +39,7 @@ export class Uploader {
         const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
         const node: MetaNode = new MetaNode(fileName)
+        node.parent = this.folder.currentNode
         // node content is encrypted content
         node.content = encContent
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
@@ -47,14 +48,10 @@ export class Uploader {
 
         let build = ``
         const test = true
-        if (test) {
-            //TODO use parent if subdirectory
-            node.script = this.metaScript(node)
-            const metanetNodeBuilt = await this.createTransaction(node)
-            if (node.script) this.folder.stageWork(metanetNodeBuilt)
-        } else {
-            this.folder.stageWork(new MetaNode(`TODO`))
-        }
+        //TODO use parent if subdirectory
+        node.script = this.metaScript(node)
+        const metanetNodeBuilt = await this.createTransaction(node)
+        if (node.script) this.folder.stageWork(metanetNodeBuilt)
         return {build: build}
     }
 
@@ -100,16 +97,17 @@ export class Uploader {
         console.log(`script for meta node has`, payTo.chunks.length,`chunks`)
         //data will get added if payto is a Script object
         let buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,fee)
-        if (buildResult.feeActual - buildResult.feeExpected > 10) {
+        if (Math.abs(buildResult.feeActual - buildResult.feeExpected) > 10) {
             //msw.logDetailsLastTx()
             //TODO: find a cleaner way to unspend the wallet utxo
             msw.clear()
             await msw.tryLoadWalletUtxos()
             console.log(`fees`, buildResult.feeActual, buildResult.feeExpected)
             buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,buildResult.feeExpected)
+        } else {
+            console.log(`skipped rebuild`, buildResult.feeActual - buildResult.feeExpected)
         }
-        // console.log(`build`, buildResult)
-        msw.logDetailsLastTx()
+        //msw.logDetailsLastTx()
         //console.log(buildResult.tx.txOuts[0])
         buildResult.tx.txOuts.forEach((o:any) => {
             this.logScript(o.script)
@@ -119,7 +117,6 @@ export class Uploader {
             console.log(`      media size x 2`, (node.content?.length||0)*2)
         }
         console.log(`    transaction size`, buildResult.hex.length)
-        //console.log(`transaction`, buildResult)
         node.transactionId = buildResult?.tx?.hash().toString('hex')
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual

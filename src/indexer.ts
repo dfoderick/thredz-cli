@@ -78,8 +78,8 @@ export class Indexer {
   async metanet(startingBlock: number = 744000) {
     const query = {
       q: {
-        //find: { "out.s2": "meta","out.s5": "dave", "blk.i": { "$gt": startingBlock } },
-        find: { "out.s2": "meta", "blk.i": { "$gt": startingBlock } },
+        find: { "out.s2": "meta","out.s5": "dave", "blk.i": { "$gt": startingBlock } },
+        //find: { "out.s2": "meta", "blk.i": { "$gt": startingBlock } },
         limit: 100,
         sort: { "blk.i": 1 },
         project: { "tx.h": 1, "out.s3": 1, "out.s4": 1, "out.s5": 1 }

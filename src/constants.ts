@@ -1,6 +1,6 @@
 export default class constants {
     static WALLET_FILE_NAME = './.thredz'
-    static MAX_BYTES_PER_TRANSACTION = 990000
+    static MAX_BYTES_PER_TRANSACTION = 9990000
     static META_PROTOCOL = 'meta'
     // the last index number of the path should increment as nodes added
     // this is path of master/root node

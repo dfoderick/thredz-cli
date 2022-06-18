@@ -11,6 +11,7 @@ export class Folder {
     backupRoot = `./backup/`
     // the curent user path
     currentPath = this.userRoot
+    //TODO: rename currentParentNode
     currentNode: MetaNode|null = null
     get cwd() { return process.cwd() }
     getuserFolder() { return `${this.userRoot}${this.user}` }
