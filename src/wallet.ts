@@ -4,6 +4,7 @@ import * as fs from "fs-extra";
 import constants from "./constants";
 import { Indexer } from "./indexer";
 
+//TODO: incorporate mswallet into this class. wrap it
 export class Wallet {
     indexer: Indexer = new Indexer()
     // this is the master key for metanet owner

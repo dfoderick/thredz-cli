@@ -1,5 +1,9 @@
 # questions
-* 
+* 11 MB error when commit/broadcast to WOC  
+`broadcast unexpected response code 500: 64: tx-size`
+
+* 40MB file. error `Invalid string length`  
+? `buildResult?.tx?.hash().toString('hex')`
 
 # thredz todo
 * fee command? set fee variables. perkb and first estimate amount, and rebuild flag?

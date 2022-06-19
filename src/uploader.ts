@@ -9,6 +9,7 @@ import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
 import { WalletStorage } from "./walletstorage";
 import Long from "long";
+import { Indexer } from "./indexer";
 
 const bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
@@ -20,6 +21,9 @@ export class Uploader {
     private wallet:Wallet
     private folder:Folder
     public fee:number = 100
+    //use this to send transaction
+    indexer: Indexer = new Indexer()
+    //obsolete
     indexService: IndexingService = new IndexingService()
     constructor(wallet: Wallet, folder: Folder) {
         this.wallet = wallet
@@ -57,11 +61,7 @@ export class Uploader {
 
     //test a simple spend
     async testSpend(payTo: string) {
-        const msw: msWallet = new msWallet(new WalletStorage(), this.indexService)
-        const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
-        //const wif = this.wallet.PrivateKeyLegacy?.toWif()
-        console.log(`wif`, wif)
-        msw.loadWallet(wif)
+        const msw: msWallet = this.getMoneyStreamWallet()
         console.log(msw._keypair.toAddress().toString())
         const utxos = await msw.loadUnspent()
         console.log(`balance`,msw.balance)
@@ -77,6 +77,7 @@ export class Uploader {
 
     getMoneyStreamWallet() {
         const msw: msWallet = new msWallet(new WalletStorage(), this.indexService)
+        msw.feePerKbNum = parseInt(process.env.FEEPERKBNUM||'10',10)
         const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
         msw.loadWallet(wif)
         //msw.logDetails()
@@ -138,7 +139,7 @@ export class Uploader {
         if (commits) {
             for (let i =0; i< commits.length; i++) {
                 // example result: 123d27dc4a5024e87178e0d6e7dee476c114d928a627a27be5ce9840ccf18a72
-                const broadcastResult = await this.indexService.broadcastRaw(commits[i].hex)
+                const broadcastResult = await this.indexer.broadcast(commits[i].hex)
                 console.log(`broadcast`,broadcastResult)
                 // if broadcast success then mark this commit and store the txn
                 commits[i].broadcast = broadcastResult

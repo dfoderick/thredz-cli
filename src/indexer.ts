@@ -15,8 +15,9 @@ export class Indexer {
     if (Buffer.isBuffer(tx)) {
       tx = tx.toString('hex');
     }
-    const url = `https://www.whatsonchain.com/v1/bsv/main/tx/raw`
+    //const url = `https://www.whatsonchain.com/v1/bsv/main/tx/raw`
     //const url = `https://api.taal.com/api/v1/broadcast`;
+    const url = `https://mapi.gorillapool.io/mapi/tx`
     console.log(`URL`, url);
 
     const fcreate = await fetch(url, {
@@ -46,6 +47,8 @@ export class Indexer {
     }
 
     // Check this is a valid hex string
+    //TODO: mapi resonse is
+    // {"payload":"{\"apiVersion\":\"\",\"timestamp\":\"2022-06-18T23:06:16.352Z\",\"txid\":\"1f24a16583a65b17f74ae2be1ce1c07638fac22bafc9dbb9a71001e75f9f96ab\",\"returnResult\":\"success\",\"resultDescription\":\"\",\"minerId\":\"03ad780153c47df915b3d2e23af727c68facaca4facd5f155bf5018b979b9aeb83\",\"currentHighestBlockHash\":\"00000000000000000c8eb57a5d115ae60eabb35dbd413f89be5e640b38c0cf70\",\"currentHighestBlockHeight\":744547,\"txSecondMempoolExpiry\":0}","signature":"3045022100d8ec588b8b8934473e4e9b69ec61a015f2399fc2dc03b7fd0ff2d14184f95f380220443c353adf6c020508cc6f44cefe46bdf5c847a2b30f9e1bb4f05dede3d67ad0","publicKey":"03ad780153c47df915b3d2e23af727c68facaca4facd5f155bf5018b979b9aeb83","encoding":"UTF-8","mimetype":"application/json"}
     if (!txid.match(/^[0-9a-fA-F]{64}$/)) {
       throw new Error(`Failed to broadcast: ${txid}`);
     }
