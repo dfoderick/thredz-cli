@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from 'path'
-import { MetaNode } from "./models/meta";
+import { MetaNode, ContainerNode } from "./models/meta";
 
 const commitsFileName = '.commits'
 const txFileNamePrefix = '.thredz.tx.'
@@ -51,7 +51,7 @@ export class Folder {
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
         this.currentPath = folder
         //find or create node
-        const node = new MetaNode(folderName||this.user)
+        const node = new ContainerNode(folderName||this.user)
         //TODO: write the node
         return node
     }

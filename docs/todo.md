@@ -6,6 +6,7 @@
 ? `buildResult?.tx?.hash().toString('hex')`
 
 # thredz todo
+* bcat, thredz protocol id
 * fee command? set fee variables. perkb and first estimate amount, and rebuild flag?
 * b format for folders? how to encode type of node in node structure
 * pull/read/clone command

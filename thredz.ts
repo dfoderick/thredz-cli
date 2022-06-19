@@ -6,7 +6,7 @@ import { logGreen, startup } from './src/utils'
 
 import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils";
-import { MetaNode } from "./src/models/meta";
+import { MetaNode, ContainerNode } from "./src/models/meta";
 import { p2p } from "./src/p2p";
 import { Indexer } from "./src/indexer";
 export const vorpal = new Vorpal();
@@ -58,7 +58,7 @@ vorpal
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         const alreadyExists = folder.createUser(name)
         if (!alreadyExists) {
-            const root: MetaNode = folder.mkdir()
+            const root: ContainerNode = folder.mkdir()
             const script = uploader.metaScript(root)
             console.log(root)
             root.script = script

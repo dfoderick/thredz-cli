@@ -3,7 +3,7 @@ import { Wallet } from "./wallet";
 import { Folder } from "./folder"
 import OpenSPV from 'openspv';
 import * as fs from "fs-extra";
-import { MetaNode } from "./models/meta";
+import { MetaNode, ContentNode } from "./models/meta";
 import constants from "./constants";
 import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
@@ -11,9 +11,11 @@ import { WalletStorage } from "./walletstorage";
 import Long from "long";
 import { Indexer } from "./indexer";
 
-const bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
+
+//https://bcat.bico.media/
+const bcatProtocolTag = '15DHFxWZJT58f9nhyGnsRBqrgwK4W6h4Up'
 
 //TODO: its more than an uploader. Its a general node processor
 // create media and text nodes and other types of nodes
@@ -36,14 +38,16 @@ export class Uploader {
         return {success: true, result: build}
     }
 
+    //make media node
     async makeTransaction(fileName:string, content: Buffer) {
         console.log(`content`, content.length)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
         const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
-        const node: MetaNode = new MetaNode(fileName)
+        const node: ContentNode = new ContentNode(fileName)
         node.parent = this.folder.currentNode
+        node.nodeType = 'media'
         // node content is encrypted content
         node.content = encContent
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
@@ -65,7 +69,7 @@ export class Uploader {
         console.log(msw._keypair.toAddress().toString())
         const utxos = await msw.loadUnspent()
         console.log(`balance`,msw.balance)
-        //TODO: use an estimator
+        //TODO: use an estimator based on transaction size
         let fee = this.fee
         let buildResult = await msw.makeSimpleSpend(Long.fromNumber(msw.balance),undefined,payTo,fee)
         if (buildResult.feeActual - buildResult.feeExpected> 10) {
@@ -77,7 +81,7 @@ export class Uploader {
 
     getMoneyStreamWallet() {
         const msw: msWallet = new msWallet(new WalletStorage(), this.indexService)
-        msw.feePerKbNum = parseInt(process.env.FEEPERKBNUM||'10',10)
+        msw.feePerKbNum = constants.FEEPERKBNUM
         const wif = this.wallet.PrivateKeyFundingDerived?.toWif()
         msw.loadWallet(wif)
         //msw.logDetails()
@@ -92,7 +96,8 @@ export class Uploader {
         if (msw.balance === 0) {
             throw new Error(`No funds available`)
         }
-        let fee = this.fee //TODO: estimate fees
+        //TODO: use an estimator based on transaction size
+        let fee = this.fee
         //payTo can be script
         const payTo = Script.fromSafeDataArray(node.script) //new Script(node.script)
         console.log(`script for meta node has`, payTo.chunks.length,`chunks`)
@@ -113,10 +118,7 @@ export class Uploader {
         buildResult.tx.txOuts.forEach((o:any) => {
             this.logScript(o.script)
         })
-        if (node.content) {
-            console.log(`media size encrypted`, node.content?.length)
-            console.log(`      media size x 2`, (node.content?.length||0)*2)
-        }
+        node.logDetails()
         console.log(`    transaction size`, buildResult.hex.length)
         node.transactionId = buildResult?.tx?.hash().toString('hex')
         node.hex = buildResult.hex
@@ -155,8 +157,6 @@ export class Uploader {
     // build script for child node
     metaScript(child: MetaNode) {
         //const digest = OpenSPV.Hash.sha512(child.content)
-        const encoding = ' '
-        const mediaType = ' '
         //   OP_RETURN
         //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
         //   [Data]
@@ -166,23 +166,15 @@ export class Uploader {
         // array elements should be buffer, string or number
         const opr: any[] = [
             ...this.metaPreamble(child),
+            ...this.thredzPreamble(child),
             // '|',
             // this.dipProtocolTag,
             // this.algorithm,
             // digest,
             // 0x01,
             // 0x05
+            child.getContentScript()
         ]
-        if (child.content) {
-            opr.push([bProtocolTag,
-                child.content || 'NULL',
-                mediaType,
-                encoding,
-                child.name,
-            ])
-        } else {
-            opr.push([child.name,])
-        }
         //console.log(opr)
         return this.asHexBuffers(opr)
     }
@@ -201,6 +193,16 @@ export class Uploader {
             child?.parent?.transactionId || 'NULL' 
         ]
     }
+        // thredz protocol scripts
+        thredzPreamble(child: MetaNode): string[] {
+            if (!child.nodeType) throw new Error(`Node Type missing!`)
+            // thredz type(schema?)
+            return [
+                constants.THREDZ_PROTOCOL, 
+                child.nodeType,
+            ]
+        }
+    
     // returns script data as array of hex buffers that Script wants
     asHexBuffers(arr:any[]): Buffer[] {
         return arr.map((a: any) => {
@@ -217,7 +219,7 @@ export class Uploader {
     // create a content node
     async createTextNode(filename: string, contents: string) {
         // make node
-        const node = new MetaNode(filename)
+        const node = new ContentNode(filename)
         node.parent = this.folder.currentNode
         //TODO: encrypt or not?
         node.content = Buffer.from(contents)

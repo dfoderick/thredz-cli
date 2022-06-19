@@ -1,4 +1,8 @@
 export default class constants {
+    // woc, taal, gorilla
+    static BROADCASTER = 'gorilla'
+    // fee is per broadcast service
+    static FEEPERKBNUM = parseInt(process.env.FEEPERKBNUM||'5',10)
     static WALLET_FILE_NAME = './.thredz'
     static MAX_BYTES_PER_TRANSACTION = 99900000
     static META_PROTOCOL = 'meta'
@@ -7,4 +11,7 @@ export default class constants {
     static META_DERIVATION_PATH = 'm/0'
     //funding path can be static or may increment
     static FUNDING_DERIVATION_PATH = 'm/0/0'
+    static THREDZ_PROTOCOL = 'thredz'
+    static bProtocolTag = '19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut'
+
 }
