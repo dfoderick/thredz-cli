@@ -3,7 +3,7 @@ import { Wallet } from "./wallet";
 import { Folder } from "./folder"
 import OpenSPV from 'openspv';
 import * as fs from "fs-extra";
-import { MetaNode, ContentNode } from "./models/meta";
+import { BNode, MetaNode, ThredzContent } from "./models/meta";
 import constants from "./constants";
 import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
@@ -13,9 +13,6 @@ import { Indexer } from "./indexer";
 
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
-
-//https://bcat.bico.media/
-const bcatProtocolTag = '15DHFxWZJT58f9nhyGnsRBqrgwK4W6h4Up'
 
 //TODO: its more than an uploader. Its a general node processor
 // create media and text nodes and other types of nodes
@@ -38,7 +35,7 @@ export class Uploader {
         return {success: true, result: build}
     }
 
-    //make media node
+    //make content node
     async makeTransaction(fileName:string, content: Buffer) {
         console.log(`content`, content.length)
         if (!this.wallet.PublicKeyMeta) throw new Error(`Wallet must be loaded!`)
@@ -46,18 +43,18 @@ export class Uploader {
         //console.log(`pubkey`, this.wallet.PublicKey)
         const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
-        const node: ContentNode = new ContentNode(fileName)
+        const node: ThredzContent = new ThredzContent(fileName)
         node.parent = this.folder.currentNode
         node.nodeType = 'media'
         // node content is encrypted content
         node.content = encContent
         if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
-            throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
+            //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
+            //TODO: explode the node into subnodes here
         }
 
         let build = ``
         const test = true
-        //TODO use parent if subdirectory
         node.script = this.metaScript(node)
         const metanetNodeBuilt = await this.createTransaction(node)
         if (node.script) this.folder.stageWork(metanetNodeBuilt)
@@ -219,14 +216,11 @@ export class Uploader {
 
     // create a content node
     async createTextNode(filename: string, contents: string) {
-        // make node
-        const node = new ContentNode(filename)
+        const node = new BNode(filename)
         node.parent = this.folder.currentNode
         //TODO: encrypt or not?
         node.content = Buffer.from(contents)
-        // store the transaction
         const built = await this.buildAndStage(node)
-        //console.log(`NODE`, node)
         return built
     }
 

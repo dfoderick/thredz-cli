@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from 'path'
-import { MetaNode, ContainerNode } from "./models/meta";
+import { MetaNode, ThredzContainer } from "./models/meta";
 //var MemoryStream = require('memorystream');
 
 const commitsFileName = '.commits'
@@ -45,14 +45,14 @@ export class Folder {
     }
 
     // create a folder and associated metanode
-    mkdir(folderName?:string): MetaNode {
+    mkdir(folderName?:string): ThredzContainer {
         const folder = path.join(this.currentPath,folderName||'')
         //const folder = `${}${folderName ? '/'+folderName:''}`
         if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
         this.currentPath = folder
         //find or create node
-        const node = new ContainerNode(folderName||this.user)
+        const node = new ThredzContainer(folderName||this.user)
         //TODO: write the node
         return node
     }

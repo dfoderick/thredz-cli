@@ -36,18 +36,68 @@ export abstract class MetaNode {
 
 }
 
-export class ContentNode extends MetaNode {
-    // node contents can be name of directory or file
+// type of thredz nodes
+enum ThredzType {
+    // a folder is an alias for a container. same concept
+    Folder = "container",
+    Container = "contaier",
+    // a file is an alias for content. same concept
+    File = "content",
+    Content = "content",
+    Script = "script",
+  }
+
+// abstract thredz node
+export abstract class ThredzNode extends MetaNode {
+    public thredzType: ThredzType|null = null
+}
+
+export class ThredzContainer extends ThredzNode {
+    constructor(name:string) {
+        super(name)
+        this.thredzType = ThredzType.Container
+    }
+}
+
+export class ThredzContent extends ThredzNode {
+    // full content if all content in node
+    content: Buffer | null = null
+    constructor(name:string) {
+        super(name)
+        this.thredzType = ThredzType.Content
+    }
+}
+
+
+// similar to bcat node
+export class BcatNode extends MetaNode {
+    // chunked content
+    contentChunks: Buffer[] | null = null
+    constructor(name:string) {
+        super(name)
+        this.nodeType = 'container'
+    }
+}
+
+// similar to b node
+export class BNode extends MetaNode {
+    // full content if all content in node
     content: Buffer | null = null
     constructor(name:string) {
         super(name)
         this.nodeType = 'content'
     }
     getContentScript() {
+        //TODO: set encoding and mediaType
         const encoding = ' '
         const mediaType = ' '
+
         if (this.content) {
-            return [
+            // if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
+            //     throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
+            //     //TODO: create subnodes
+            // }
+        return [
                 constants.bProtocolTag,
                 this.content,
                 mediaType,
@@ -66,10 +116,4 @@ export class ContentNode extends MetaNode {
     }
 }
 
-export class ContainerNode extends MetaNode {
-    constructor(name:string) {
-        super(name)
-        this.nodeType = 'container'
-    }
-}
 
