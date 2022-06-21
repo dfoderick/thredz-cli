@@ -14,6 +14,12 @@ export class Wallet {
     user: string = ''
     utxos: any = []
 
+    static load(contents?:any) {
+        const w = new Wallet()
+        w.load(contents)
+        return w
+    }
+
     static fromRandom() {
         const w = new Wallet()
         w.keyMeta = KeyPair.fromRandom()

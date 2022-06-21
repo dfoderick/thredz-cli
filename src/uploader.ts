@@ -41,6 +41,7 @@ export class Uploader {
     //make media node
     async makeTransaction(fileName:string, content: Buffer) {
         console.log(`content`, content.length)
+        if (!this.wallet.PublicKeyMeta) throw new Error(`Wallet must be loaded!`)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
         const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
@@ -120,7 +121,7 @@ export class Uploader {
         })
         node.logDetails()
         console.log(`    transaction size`, buildResult.hex.length)
-        node.transactionId = buildResult?.tx?.hash().toString('hex')
+        node.transactionId = buildResult?.tx?.id().toString('hex')
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected

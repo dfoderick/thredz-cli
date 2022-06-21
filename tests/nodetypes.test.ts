@@ -1,7 +1,4 @@
 import { ContainerNode, ContentNode, MetaNode } from "../src/models/meta";
-import {Folder} from "../src/folder"
-import {Uploader} from "../src/uploader"
-import {Wallet} from "../src/wallet"
 
 test('container node', () => {
     const node = new ContainerNode('test')

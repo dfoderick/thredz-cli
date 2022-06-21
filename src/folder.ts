@@ -1,6 +1,7 @@
 import * as fs from "fs-extra";
 import * as path from 'path'
 import { MetaNode, ContainerNode } from "./models/meta";
+//var MemoryStream = require('memorystream');
 
 const commitsFileName = '.commits'
 const txFileNamePrefix = '.thredz.tx.'
@@ -142,6 +143,17 @@ export class Folder {
             return null
         }
     }
+    chunkSubstr(str:string, size:number) {
+        const numChunks = Math.ceil(str.length / size)
+        const chunks = new Array(numChunks)
+      
+        for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+          chunks[i] = str.substr(o, size)
+        }
+      
+        return chunks
+      }
+
     // this should be the only way of storing commits
     saveCommits(jcommits:any) {
         // store any commits broadcasted and filter those out
@@ -151,7 +163,20 @@ export class Folder {
         })
         // save the rest
         const jnotsaved = jcommits.filter((c:any) => !c.saved)
-        fs.writeFileSync(this.getcommitFileName(), JSON.stringify(jnotsaved))
+        //fs.writeJSONSync(this.getcommitFileName(), jnotsaved)
+        //fs.writeFileSync(this.getcommitFileName(), JSON.stringify(jnotsaved))
+        const writableStream = fs.createWriteStream(this.getcommitFileName())
+        //writableStream.write(JSON.stringify(jnotsaved))
+
+        // 'Invalid string length' when size too large for v8
+        const snotsaved = JSON.stringify(jnotsaved)
+        // var memStream = new MemoryStream(snotsaved)
+        // pipe does not work
+        // memStream.pipe(writableStream)
+        this.chunkSubstr(snotsaved,100000).forEach(c => {
+            writableStream.write(c)
+        })
+        writableStream.end()
         console.log(`wrote`, this.getcommitFileName())
     }
 
@@ -199,7 +224,12 @@ export class Folder {
         let jcurrent = []
         if (this.isPendingCommit()){
             const current = this.getfileContents(this.getcommitFileName())
-            jcurrent = JSON.parse(current.toString())    
+            try {
+                jcurrent = JSON.parse(current.toString())
+            } catch (err) {
+                //rename current to backup
+                fs.moveSync(this.getcommitFileName(), this.getcommitFileName()+'.backup')
+            }
         }
         // commit file will be an array of json MetaNode objects
         jcurrent.push(node)
@@ -213,6 +243,9 @@ export class Folder {
         const commits = this.getcommitFileName()
         if (fs.existsSync(commits)) {
             const count = this.dumpFileContents(commits, !isDetail)
+            if (isNaN(count)) {
+                this.cancel()
+            }
             console.log(`Run 'commit' to save ${count} changes to metanet`)
             if (!isDetail) console.log(`Run 'status -d' to see detailed changes`)
         } else {
