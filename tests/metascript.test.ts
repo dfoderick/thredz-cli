@@ -1,4 +1,4 @@
-import { MetaNode, ContainerNode } from "../src/models/meta";
+import { MetaNode, ThredzContainer } from "../src/models/meta";
 import {Folder} from "../src/folder"
 import {Uploader} from "../src/uploader"
 import {Wallet} from "../src/wallet"
@@ -8,7 +8,7 @@ test('generates a root script', () => {
     const folder = new Folder()
     folder.user="dave"
     const uploader = new Uploader(wallet, folder)
-    const node: MetaNode = new ContainerNode(folder.getuserFolder())
+    const node: MetaNode = new ThredzContainer(folder.getuserFolder())
     const script = uploader.metaScript(node)
     console.log(script)
     expect(script).toBeDefined()
