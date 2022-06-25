@@ -15,9 +15,12 @@ export class Folder {
     //TODO: rename currentParentNode
     currentNode: MetaNode|null = null
     get cwd() { return process.cwd() }
-    getuserFolder() { return `${this.userRoot}${this.user}` }
+    getuserFolder() { 
+        // console.log(`user folder`,`${this.userRoot}${this.user}`)
+        return `${this.userRoot}${this.user}` 
+    }
     //todo: recursively find commits
-    getcommitFileName() { return `${this.currentPath}/${commitsFileName}` }
+    getcommitFileName() { return `${this.getuserFolder()}/${commitsFileName}` }
     getTransactionFileName(txid:string) { return `${this.currentPath}/${txFileNamePrefix}${txid}` }
 
     constructor() {
@@ -77,7 +80,7 @@ export class Folder {
         //this should be the only place where currentPath is set
         this.currentPath = path.join(this.currentPath, folderName)
         this.currentNode = this.findCurrentNode()
-        console.log(`current`,this.currentNode?.transactionId)
+        console.log(`current node`,this.currentNode?.transactionId)
     }
 
     findCurrentNode(): MetaNode|null {
@@ -128,18 +131,23 @@ export class Folder {
     }
 
     getfileContents(fileName:string) {
-        const contents = fs.readFileSync(fileName)
-        //console.log(`got`,fileName)
+        //if (!fs.existsSync) return null
+        //throw new Error(`${fileName} does not exist`)
+        const actual = path.join(process.cwd(), fileName)
+        console.log(`gonna open`, actual)
+        //console.log(`node dir`, __dirname)
+        const contents = fs.readFileSync(actual)
         return contents
     }
 
     // gets commits as json object
-    getCommits() {
+    getCommits(): any[] | null {
         const contents = this.getfileContents(this.getcommitFileName())
         if (contents[0] == 91) {
             const jcontents = JSON.parse(contents.toString())
             return jcontents
         } else {
+            console.error(`unexpected contents`, this.getcommitFileName(), contents[0])
             return null
         }
     }

@@ -1,13 +1,19 @@
 import constants from '../constants'
 
+export enum NodeType {
+    Thredz = 'thredz',
+    Container = 'container',
+    Content = 'content'
+}
+
 // a metanet node
 // an in-memory graph of notes will be maintained by app
 // serialized to local file or database
 export abstract class MetaNode {
     // the parent owner node, null if root domain
     parent: MetaNode|null =  null
-    // node type. folder, file, schema, script
-    nodeType: string = ''
+    // node type. container or content //folder, file, schema, script
+    nodeType: NodeType = NodeType.Thredz
     //TODO: link to the previous version of this MetanetNode
     previousVersion: MetaNode|null = null
     // name of node contents, should be unique in folder, like a file name
@@ -30,8 +36,12 @@ export abstract class MetaNode {
     constructor(name:string) {
         this.name = name
     }
+    addChild(node: MetaNode) {this.children.push(node)}
 
-    getContentScript(): (string|Buffer)[] {return [this.name]}
+    getContentScript(): (string|Buffer)[] {
+        this.script = [this.name,]
+        return this.script
+    }
     logDetails() {}
 
 }
@@ -40,7 +50,7 @@ export abstract class MetaNode {
 enum ThredzType {
     // a folder is an alias for a container. same concept
     Folder = "container",
-    Container = "contaier",
+    Container = "container",
     // a file is an alias for content. same concept
     File = "content",
     Content = "content",
@@ -66,6 +76,24 @@ export class ThredzContent extends ThredzNode {
         super(name)
         this.thredzType = ThredzType.Content
     }
+    prepareContent() {
+        if (!this.content) return
+        if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
+            //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
+            //TODO: explode the node into subnodes here
+            const bcat = new BcatNode(this.name)
+            this.addChild(bcat)
+
+        } else {
+            const child = new BNode(this.name)
+            this.addChild(child)
+        }
+    }
+    getContentScript() {
+        const result = super.getContentScript()
+        this.children.forEach(c => c.getContentScript())
+        return result
+    }
 }
 
 
@@ -75,7 +103,7 @@ export class BcatNode extends MetaNode {
     contentChunks: Buffer[] | null = null
     constructor(name:string) {
         super(name)
-        this.nodeType = 'container'
+        this.nodeType = NodeType.Container
     }
 }
 
@@ -85,7 +113,7 @@ export class BNode extends MetaNode {
     content: Buffer | null = null
     constructor(name:string) {
         super(name)
-        this.nodeType = 'content'
+        this.nodeType = NodeType.Content
     }
     getContentScript() {
         //TODO: set encoding and mediaType
@@ -93,10 +121,6 @@ export class BNode extends MetaNode {
         const mediaType = ' '
 
         if (this.content) {
-            // if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
-            //     throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
-            //     //TODO: create subnodes
-            // }
         return [
                 constants.bProtocolTag,
                 this.content,

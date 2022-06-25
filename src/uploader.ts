@@ -41,18 +41,13 @@ export class Uploader {
         if (!this.wallet.PublicKeyMeta) throw new Error(`Wallet must be loaded!`)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
-        const encContent = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
+        const encContent: Buffer = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
         const node: ThredzContent = new ThredzContent(fileName)
         node.parent = this.folder.currentNode
-        node.nodeType = 'media'
         // node content is encrypted content
         node.content = encContent
-        if (content.length > constants.MAX_BYTES_PER_TRANSACTION) {
-            //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
-            //TODO: explode the node into subnodes here
-        }
-
+        node.prepareContent()
         let build = ``
         const test = true
         node.script = this.metaScript(node)
@@ -87,6 +82,7 @@ export class Uploader {
     }
 
     //create a transaction for the node, returns the updated node
+    //TODO: navigate node children and build those nodes
     async createTransaction(node: MetaNode) {
         //await this.wallet.getBalance()
         const msw: msWallet = this.getMoneyStreamWallet()
