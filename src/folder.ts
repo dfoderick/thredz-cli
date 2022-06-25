@@ -1,4 +1,5 @@
-import * as fs from "fs-extra";
+import * as fs from "fs"
+import * as fsextra from "fs-extra"
 import * as path from 'path'
 import { MetaNode, ThredzContainer } from "./models/meta";
 //var MemoryStream = require('memorystream');
@@ -99,7 +100,7 @@ export class Folder {
     }
 
     backup() {
-        fs.copySync(this.userRoot, this.backupRoot)
+        fsextra.copySync(this.userRoot, this.backupRoot)
     }
 
     validate() {
@@ -131,11 +132,12 @@ export class Folder {
     }
 
     getfileContents(fileName:string) {
-        //if (!fs.existsSync) return null
-        //throw new Error(`${fileName} does not exist`)
         const actual = path.join(process.cwd(), fileName)
+        if (!fs.existsSync(actual)) //return null
+            throw new Error(`${actual} does not exist`)
         console.log(`gonna open`, actual)
-        //console.log(`node dir`, __dirname)
+        const stats = fs.statSync(actual)
+        console.log(`stats`, stats)
         const contents = fs.readFileSync(actual)
         return contents
     }
@@ -185,6 +187,8 @@ export class Folder {
             writableStream.write(c)
         })
         writableStream.end()
+        // is close required?
+        writableStream.close()
         console.log(`wrote`, this.getcommitFileName())
     }
 
@@ -236,7 +240,7 @@ export class Folder {
                 jcurrent = JSON.parse(current.toString())
             } catch (err) {
                 //rename current to backup
-                fs.moveSync(this.getcommitFileName(), this.getcommitFileName()+'.backup')
+                fsextra.moveSync(this.getcommitFileName(), this.getcommitFileName()+'.backup')
             }
         }
         // commit file will be an array of json MetaNode objects
