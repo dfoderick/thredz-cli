@@ -2,7 +2,7 @@ import * as fs from "fs"
 import * as fsextra from "fs-extra"
 import * as path from 'path'
 import { MetaNode, ThredzContainer } from "./models/meta";
-//var MemoryStream = require('memorystream');
+import { chunkSubstr } from "./utils";
 
 const commitsFileName = '.commits'
 const txFileNamePrefix = '.thredz.tx.'
@@ -153,19 +153,11 @@ export class Folder {
             return null
         }
     }
-    chunkSubstr(str:string, size:number) {
-        const numChunks = Math.ceil(str.length / size)
-        const chunks = new Array(numChunks)
-      
-        for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
-          chunks[i] = str.substr(o, size)
-        }
-      
-        return chunks
-      }
 
     // this should be the only way of storing commits
-    saveCommits(jcommits:any) {
+    // returns number of commits pending
+    saveCommits(jcommits:any[]|null):number|null {
+        if (!jcommits) return null
         // store any commits broadcasted and filter those out
         // mark comes saved using .saved property
         jcommits.forEach((commit:any) => {
@@ -176,20 +168,23 @@ export class Folder {
         //fs.writeJSONSync(this.getcommitFileName(), jnotsaved)
         //fs.writeFileSync(this.getcommitFileName(), JSON.stringify(jnotsaved))
         const writableStream = fs.createWriteStream(this.getcommitFileName())
-        //writableStream.write(JSON.stringify(jnotsaved))
-
+        writableStream.write(`[\n`)
         // 'Invalid string length' when size too large for v8
-        const snotsaved = JSON.stringify(jnotsaved)
-        // var memStream = new MemoryStream(snotsaved)
-        // pipe does not work
-        // memStream.pipe(writableStream)
-        this.chunkSubstr(snotsaved,100000).forEach(c => {
-            writableStream.write(c)
+        console.log(`commits stringify length`, jnotsaved.length)
+        jnotsaved.forEach(e => {
+            const snotsaved = JSON.stringify(e, undefined, 2)
+            // might not need to chunk the string if each bpart is 10MB?
+            chunkSubstr(snotsaved,100000).forEach(c => {
+                writableStream.write(c)
+            })
+            writableStream.write(`,\n`)
         })
+        writableStream.write(`]\n`)
         writableStream.end()
         // is close required?
         writableStream.close()
-        console.log(`wrote`, this.getcommitFileName())
+        console.log(`wrote`, this.getcommitFileName(), jnotsaved.length)
+        return jnotsaved.length
     }
 
     //true if transaction was broadcast correctly
@@ -232,7 +227,7 @@ export class Folder {
         }
     }
     //stage a step of a unit of work
-    stageWork(node: MetaNode) {
+    stageWork(node: MetaNode): number|null {
         let jcurrent = []
         if (this.isPendingCommit()){
             const current = this.getfileContents(this.getcommitFileName())
@@ -244,14 +239,16 @@ export class Folder {
             }
         }
         // commit file will be an array of json MetaNode objects
-        jcurrent.push(node)
-        this.saveCommits(jcurrent)
+        const more = node.getUnsavedAndChildren()
+        //console.log(`more`, more)
+        jcurrent = jcurrent.concat(more)
+        return this.saveCommits(jcurrent)
     }
     isPendingCommit() {
         const commits = this.getcommitFileName()
         return fs.existsSync(commits)
     }
-    checkCommitsPending(isDetail = false) {
+    checkCommitsPending(isDetail = false): number {
         const commits = this.getcommitFileName()
         if (fs.existsSync(commits)) {
             const count = this.dumpFileContents(commits, !isDetail)
@@ -260,8 +257,10 @@ export class Folder {
             }
             console.log(`Run 'commit' to save ${count} changes to metanet`)
             if (!isDetail) console.log(`Run 'status -d' to see detailed changes`)
+            return count
         } else {
             console.log(`No pending commits ${commits}`)
+            return 0
         }
     }
     //traverse folder structure

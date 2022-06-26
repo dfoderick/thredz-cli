@@ -21,8 +21,8 @@ test('write bcat', async () => {
   folder.cancel()
   const uploader = new Uploader(wallet, folder)
   const result = await uploader.prepare('./media/bunny_full_low.mp4')
-  //const result = await uploader.prepare('./media/blank.mp4')
-  console.log(`UPLOAD RESULT`, result.success)
+  console.log(`UPLOAD RESULT`, result.success, result.result.commits)
+  expect(result.result.commits).toBeGreaterThan(3)
   //load commit and get result
   // I have no idea why cannot getCommits here? Why???
   // const folder2 = new Folder()
@@ -30,5 +30,6 @@ test('write bcat', async () => {
   // const commits = folder2.getCommits()
   // console.log(`TEST COMMITS`, commits)
   // expect(commits?.length).toBeGreaterThan(33)
+  console.log(`COMMITS PENDING`,folder.checkCommitsPending())
 }, 60000);
 

@@ -9,11 +9,10 @@ test('generates a root script', () => {
     folder.user="dave"
     const uploader = new Uploader(wallet, folder)
     const node: MetaNode = new ThredzContainer(folder.getuserFolder())
-    const script = uploader.metaScript(node)
-    console.log(script)
-    expect(script).toBeDefined()
-    expect(script[2].toString()).toBe('NULL')
-    expect(script[3].toString()).toBe('thredz')
+    node.generateScript()
+    expect(node.script).toBeDefined()
+    expect(node.script[2].toString()).toBe('NULL')
+    expect(node.script[3].toString()).toBe('thredz')
   });
 
   test('generates a subfolder script', () => {
@@ -25,12 +24,11 @@ test('generates a root script', () => {
     parent.transactionId = "PARENTTRANSACTIONID" //TODO: should get txid from folder
     const child: MetaNode = folder.mkdir('subfolder')
     child.parent = parent
-    const script = uploader.metaScript(child)
-    console.log(script)
-    expect(script).toBeDefined()
-    expect(script[2].toString()).toBe('PARENTTRANSACTIONID')
-    expect(script[3].toString()).toBe('thredz')
-    expect(script[5].toString()).toBe('subfolder')
+    child.generateScript()
+    expect(child.script).toBeDefined()
+    expect(child.script[2].toString()).toBe('PARENTTRANSACTIONID')
+    expect(child.script[3].toString()).toBe('thredz')
+    expect(child.script[5].toString()).toBe('subfolder')
   });
 
   //TODO: a subfolder

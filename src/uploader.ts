@@ -10,6 +10,7 @@ import {Wallet as msWallet, Script} from 'moneystream-wallet'
 import { WalletStorage } from "./walletstorage";
 import Long from "long";
 import { Indexer } from "./indexer";
+import { asHexBuffers } from "./utils";
 
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
@@ -36,24 +37,32 @@ export class Uploader {
     }
 
     //make content node
-    async makeTransaction(fileName:string, content: Buffer) {
+    async makeTransaction(fileName:string, content: Buffer): Promise<any> {
         console.log(`content`, content.length)
         if (!this.wallet.PublicKeyMeta) throw new Error(`Wallet must be loaded!`)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
         const encContent: Buffer = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
+        // node is thredz content
         const node: ThredzContent = new ThredzContent(fileName)
         node.parent = this.folder.currentNode
         // node content is encrypted content
         node.content = encContent
+        // if content is large then it will split into parts
         node.prepareContent()
         let build = ``
         const test = true
-        node.script = this.metaScript(node)
+        // navigate down the node tree and build all the scripts
+        const script = node.generateScript()
+        console.log(`script`, script)
         const metanetNodeBuilt = await this.createTransaction(node)
-        if (node.script) this.folder.stageWork(metanetNodeBuilt)
-        return {build: build}
+        //TODO visit each node
+        let commits = null
+        // navigate down the node tree and stage each node
+        if (node.script) commits = this.folder.stageWork(metanetNodeBuilt)
+        //TODO: should always create 2 or more commits. one for thredz one for b or bcat
+        return {commits: commits, node:metanetNodeBuilt}
     }
 
     //test a simple spend
@@ -82,7 +91,7 @@ export class Uploader {
     }
 
     //create a transaction for the node, returns the updated node
-    //TODO: navigate node children and build those nodes
+    //navigate node children and build those nodes too
     async createTransaction(node: MetaNode) {
         //await this.wallet.getBalance()
         const msw: msWallet = this.getMoneyStreamWallet()
@@ -148,67 +157,31 @@ export class Uploader {
         return committed
     }
 
-    // build script for child node
-    metaScript(child: MetaNode) {
-        //const digest = OpenSPV.Hash.sha512(child.content)
-        //   OP_RETURN
-        //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
-        //   [Data]
-        //   [Media Type]
-        //   [Encoding]
-        //   [Filename]
-        // array elements should be buffer, string or number
-        const opr: any[] = [
-            ...this.metaPreamble(child),
-            ...this.thredzPreamble(child),
-            // '|',
-            // this.dipProtocolTag,
-            // this.algorithm,
-            // digest,
-            // 0x01,
-            // 0x05
-            child.getContentScript()
-        ]
-        //console.log(opr)
-        return this.asHexBuffers(opr)
-    }
-
-    // metanet protocol scripts
-    metaPreamble(child: MetaNode): string[] {
-        const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
-        //console.log(`DERIVED`,derivedKey)
-        if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
-        if (child.parent && !child.parent.transactionId) {
-            throw new Error(`Parent node must have a transactionId`)
-        }
-        return [
-            constants.META_PROTOCOL, 
-            derivedKey?.Address.toString(),
-            child?.parent?.transactionId || 'NULL' 
-        ]
-    }
-        // thredz protocol scripts
-        thredzPreamble(child: MetaNode): string[] {
-            if (!child.nodeType) throw new Error(`Node Type missing!`)
-            // thredz type(schema?)
-            return [
-                constants.THREDZ_PROTOCOL, 
-                child.nodeType,
-            ]
-        }
-    
-    // returns script data as array of hex buffers that Script wants
-    asHexBuffers(arr:any[]): Buffer[] {
-        return arr.map((a: any) => {
-            if (a instanceof Buffer) return a //Buffer.from(a.toString('hex'))
-            if (typeof a === 'number') {
-                if (a < 16 ) return Buffer.from(a.toString(16).padStart(2,'0'))
-                throw Error(`FIX ASHEX ${a}`)
-            }
-            if (a === null) throw new Error(`METANET script element cannot be NULL`)
-            return Buffer.from(a.toString('hex'))
-        })
-    }
+    // // build script for child node
+    // //TODO: move this to MetaNode.generateScript
+    // metaScript(node: MetaNode) {
+    //     //const digest = OpenSPV.Hash.sha512(child.content)
+    //     //   OP_RETURN
+    //     //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
+    //     //   [Data]
+    //     //   [Media Type]
+    //     //   [Encoding]
+    //     //   [Filename]
+    //     // array elements should be buffer, string or number
+    //     const opr: any[] = [
+    //         ...this.metaPreamble(node),
+    //         ...this.thredzPreamble(node),
+    //         // '|',
+    //         // this.dipProtocolTag,
+    //         // this.algorithm,
+    //         // digest,
+    //         // 0x01,
+    //         // 0x05
+    //         node.getContentScript()
+    //     ]
+    //     //console.log(opr)
+    //     return asHexBuffers(opr)
+    // }    
 
     // create a content node
     async createTextNode(filename: string, contents: string) {
@@ -221,7 +194,8 @@ export class Uploader {
     }
 
     async buildAndStage(node:MetaNode) {
-        node.script = this.metaScript(node)
+        //node.script = this.metaScript(node)
+        node.generateScript()
         const metanetNodeBuilt = await this.createTransaction(node)
         if (node.script) this.folder.stageWork(metanetNodeBuilt)
         return metanetNodeBuilt

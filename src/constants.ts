@@ -5,8 +5,8 @@ export default class constants {
     static FEEPERKBNUM = parseInt(process.env.FEEPERKBNUM||'5',10)
     static WALLET_FILE_NAME = './.thredz'
     // testing gorilla > 10MB. worked with 22 MB
-    //static MAX_BYTES_PER_TRANSACTION = 99900000
-    // bcat should work for most miners
+    // static MAX_BYTES_PER_TRANSACTION = 99900000
+    // bcat should work for most miners, just under 10MB
     static MAX_BYTES_PER_TRANSACTION = 9990000
     static META_PROTOCOL = 'meta'
     // the last index number of the path should increment as nodes added

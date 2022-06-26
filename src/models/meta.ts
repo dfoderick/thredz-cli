@@ -1,4 +1,6 @@
 import constants from '../constants'
+import { KeyPair } from '../key'
+import { asHexBuffers, asHexStrings, chunkBuffer, chunkSubstr } from '../utils'
 
 export enum NodeType {
     Thredz = 'thredz',
@@ -18,10 +20,13 @@ export abstract class MetaNode {
     previousVersion: MetaNode|null = null
     // name of node contents, should be unique in folder, like a file name
     name: string = ''
-    // location of node within hd key structure. experiment with saving onchain
+    // location of node within hd key structure. experiment with saving keypath onchain
+    //TODO: use a hierarchy
     keyPath: string = constants.META_DERIVATION_PATH
+    //TODO: calculate
+    derivedKey: KeyPair|null = null
     // script chunks that will be written to the transaction
-    script: any[] = []
+    script: Buffer[] = []
     // child nodes
     children: MetaNode[] = []
 
@@ -32,18 +37,117 @@ export abstract class MetaNode {
     fee?: number
     // expected fee based on transaction size. should be close to fee
     feeExpected?: number
+    isPersisted = false
 
     constructor(name:string) {
         this.name = name
     }
+    // the NodeId for referencing the unique node
+    // TODO: should be pubkey + txid?
+    get nodeId(): string {
+        if (this.transactionId) return this.transactionId
+        return ''
+    }
     addChild(node: MetaNode) {this.children.push(node)}
 
+    // exclude duplicate data. only include properties to store
+    toPersistent() {
+        //TODO: figure out if already persisted
+        if (this.isPersisted) return null
+        // this.isPersisted = true //?
+        return {
+            parent: this.parent?.nodeId,
+            id: this.nodeId,
+            name:this.name, 
+            nodeType:this.nodeType, 
+            keyPath: this.keyPath, 
+            transactionId: this.transactionId,
+            script: this.hex ? null : asHexStrings(this.script),
+            hex: this.hex,
+        }
+    }
+
+    getUnsavedAndChildren(): any[] {
+        let results: any[] = []
+        const me = this.toPersistent()
+        if (me) results.push(me)
+        this.children?.forEach(c => {
+            const p = c.getUnsavedAndChildren()
+            if (p) results = results.concat(p)
+        })
+        return results
+    }
+
     getContentScript(): (string|Buffer)[] {
-        this.script = [this.name,]
+        this.script = [Buffer.from(this.name)]
         return this.script
     }
-    logDetails() {}
+    logDetails() { 
+        console.log(this.constructor.name, this.name, this.nodeType )
+        console.log(this.script)
+        this.children?.forEach(c => c.logDetails())
+    }
+    // visit(f:any) {
+    //     console.log(this.constructor.name, this.name, this.nodeType )
+    //     this.children?.forEach(c => c.logDetails())
+    // }
 
+    generateScript() {
+        //const digest = OpenSPV.Hash.sha512(child.content)
+        //   OP_RETURN
+        //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
+        //   [Data]
+        //   [Media Type]
+        //   [Encoding]
+        //   [Filename]
+        // array elements should be buffer, string or number
+        const opr: any[] = [
+            ...this.metaPreamble(),
+            //TODO: only if thredz node
+            ...this.thredzPreamble(),
+            // '|',
+            // this.dipProtocolTag,
+            // this.algorithm,
+            // digest,
+            // 0x01,
+            // 0x05
+        ]
+        opr.push(this.getContentScript())
+
+        //console.log(opr)
+        this.script = asHexBuffers(opr)
+
+        this.children.forEach(c => {
+            c.generateScript()
+        })
+        return this.script
+    }
+
+        // metanet protocol scripts
+        metaPreamble(): string[] {
+            // const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
+            // //console.log(`DERIVED`,derivedKey)
+            // if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
+            if (this.parent && !this.parent.transactionId) {
+                throw new Error(`Parent node must have a transactionId`)
+            }
+            return [
+                constants.META_PROTOCOL, 
+                //TODO: should never be blank
+                this.derivedKey?.Address.toString() || '',
+                this.parent?.transactionId || 'NULL' 
+            ]
+        }
+            // thredz protocol scripts
+            thredzPreamble(): string[] {
+                if (!this.nodeType) throw new Error(`Node Type missing!`)
+                // thredz type(schema?)
+                return [
+                    constants.THREDZ_PROTOCOL, 
+                    this.nodeType,
+                ]
+            }
+    
 }
 
 // type of thredz nodes
@@ -60,12 +164,20 @@ enum ThredzType {
 // abstract thredz node
 export abstract class ThredzNode extends MetaNode {
     public thredzType: ThredzType|null = null
+    logDetails() {
+        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        this.children?.forEach(c => c.logDetails())
+    }
 }
 
 export class ThredzContainer extends ThredzNode {
     constructor(name:string) {
         super(name)
         this.thredzType = ThredzType.Container
+    }
+    logDetails() {
+        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        this.children?.forEach(c => c.logDetails())
     }
 }
 
@@ -76,23 +188,73 @@ export class ThredzContent extends ThredzNode {
         super(name)
         this.thredzType = ThredzType.Content
     }
+    logDetails() {
+        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        this.children?.forEach(c => c.logDetails())
+    }
     prepareContent() {
         if (!this.content) return
         if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
             //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
-            //TODO: explode the node into subnodes here
             const bcat = new BcatNode(this.name)
             this.addChild(bcat)
+            //TODO: explode the node into subnodes here
+            // bcat parts
+            bcat.contentChunks = chunkBuffer(this.content, constants.MAX_BYTES_PER_TRANSACTION)
+            console.log(`chunks`, bcat.contentChunks)
+            for (let i =0; i< bcat.contentChunks.length; i++) {
+                const child = new BNode(this.name)
+                child.partNumber = i
+                child.content = bcat.contentChunks[i]
+                bcat.addChild(child)
+            }
+    
+// The 15DHFxWZJT58f9nhyGnsRBqrgwK4W6h4Up bitcom namespace must have 7 or more arguments to be valid:
+
+// A string providing any unstructured info the sender finds relevant to share about how the Bcat transaction came to life. No longer than 128 characters (can be an empty string in the transaction data - but please be aware that some frameworks for BSV to create and broadcast transactions will treat an empty string as no data and then not provide any string)
+
+// A string providing the MIME type of the content of the file. No longer than 128 characters
+
+// A string providing the charset/encoding of the file. No longer than 16 characters (can be NULL[1])
+
+// A string providing the name of the file. No longer than 256 characters (can be NULL[1])
+
+// A string providing a flag indicating how to treat data. No longer than 16 characters (can be NULL[1])
+
+// 32 bytes representing the bytes of the hash of the transaction with the first part of data of the file (TX1).
+
+// 32 bytes representing the bytes of the hash of the transaction with the second part of data of the file (TX2)
+
+// Any number of arguments can follow providing a sequence of transaction IDs (TXn) in the order of how data is to be represented in the file. To be a valid Bcat transaction all transaction IDs (TX1, TX2, ... TXn) must be unique, unless using the creative flag.
+
 
         } else {
             const child = new BNode(this.name)
             this.addChild(child)
         }
+        this.logDetails()
     }
-    getContentScript() {
-        const result = super.getContentScript()
-        this.children.forEach(c => c.getContentScript())
-        return result
+    // A threadz content is (usually) a parent pointer to a b or bcat content txn
+    // it will not hold content itself
+    // getContentScript() {
+    //     return []
+    //     // const result = super.getContentScript()
+    //     // this.children.forEach(c => c.getContentScript())
+    //     // return result
+    // }
+    generateScript() {
+        const opr: any[] = [
+            ...this.metaPreamble(),
+            //TODO: only if thredz node
+            ...this.thredzPreamble(),
+        ]
+        //opr.push(this.getContentScript())
+        //console.log(opr)
+        this.script = asHexBuffers(opr)
+        this.children.forEach(c => {
+            c.generateScript()
+        })
+        return this.script
     }
 }
 
@@ -105,12 +267,17 @@ export class BcatNode extends MetaNode {
         super(name)
         this.nodeType = NodeType.Container
     }
+    logDetails() {
+        console.log(this.constructor.name, this.name, this.nodeType ) 
+        this.children?.forEach(c => c.logDetails())
+    }
 }
 
 // similar to b node
 export class BNode extends MetaNode {
     // full content if all content in node
     content: Buffer | null = null
+    partNumber: number = 0
     constructor(name:string) {
         super(name)
         this.nodeType = NodeType.Content
@@ -133,11 +300,12 @@ export class BNode extends MetaNode {
         }
     }
     logDetails() {
+        console.log(this.constructor.name, `Part ${this.partNumber}`, this.name, this.nodeType ) 
         if (this.content) {
             console.log(`media size encrypted`, this.content?.length)
             console.log(`      media size x 2`, (this.content?.length||0)*2)
         }
+        this.children?.forEach(c => c.logDetails())
     }
 }
-
 
