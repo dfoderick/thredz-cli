@@ -49,6 +49,8 @@ export class Uploader {
         // node is thredz content
         const node: ThredzContent = new ThredzContent(fileName)
         node.parent = this.folder.currentNode
+        //TODO: sort out derived key and metanet
+        node.derivedKey = this.wallet.keyMeta
         // node content is encrypted content
         node.content = encContent
         // if content is large then it will split into parts
@@ -56,6 +58,7 @@ export class Uploader {
         let build = ``
         const test = true
         // navigate down the node tree and build all the scripts
+        if (!node.derivedKey) throw new Error(`cannot generate script without a meta key!`)
         const script = node.generateScript()
         //console.log(`script`, script)
         const metanetNodeBuilt = await this.createTransaction(node)

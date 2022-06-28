@@ -13,7 +13,7 @@ export enum NodeType {
 // serialized to local file or database
 export abstract class MetaNode {
     // the parent owner node, null if root domain
-    parent: MetaNode|null =  null
+    private _parent: MetaNode|null =  null
     // node type. container or content //folder, file, schema, script
     nodeType: NodeType = NodeType.Thredz
     //TODO: link to the previous version of this MetanetNode
@@ -23,7 +23,8 @@ export abstract class MetaNode {
     // location of node within hd key structure. experiment with saving keypath onchain
     //TODO: use a hierarchy
     keyPath: string = constants.META_DERIVATION_PATH
-    //TODO: calculate
+    //TODO: calculate derived key
+    // Metanet key only needs to be set on root. children will find it
     derivedKey: KeyPair|null = null
     // script chunks that will be written to the transaction
     script: Buffer[] = []
@@ -42,13 +43,35 @@ export abstract class MetaNode {
     constructor(name:string) {
         this.name = name
     }
+
+    get parent(): MetaNode|null { return this._parent}
+    set parent(val: MetaNode|null) {
+        this._parent = val
+        if (this._parent) {
+            this._parent.addChild(this)
+        }
+    }
+
     // the NodeId for referencing the unique node
     // TODO: should be pubkey + txid?
     get nodeId(): string {
         if (this.transactionId) return this.transactionId
         return ''
     }
-    addChild(node: MetaNode) {this.children.push(node)}
+    get nodeDescription(): string {
+        return `${this.nodeType}[${this.nodeId}]`
+    }
+    addChild(node: MetaNode) {
+        //TODO: make sure node is not already in the children!!!
+        //i.e. identity map
+        this.children.push(node)
+    }
+
+    // get metanet key controlling this branch of nodes
+    getMetanetKeyInBranch(): KeyPair|null|undefined {
+        if (this.derivedKey) return this.derivedKey
+        return this._parent?.getMetanetKeyInBranch()
+    }
 
     // exclude duplicate data. only include properties to store
     toPersistent() {
@@ -62,9 +85,9 @@ export abstract class MetaNode {
             nodeType:this.nodeType, 
             keyPath: this.keyPath, 
             transactionId: this.transactionId,
-            //script: this.hex ? null : asHexStrings(this.script),
+            script: this.hex ? `array of ${this.script.length}` : asHexStrings(this.script),
             //TODO: will this cause out of memory???
-            script: asHexStrings(this.script),
+            //script: asHexStrings(this.script),
             hex: this.hex,
         }
     }
@@ -131,12 +154,14 @@ export abstract class MetaNode {
             // //console.log(`DERIVED`,derivedKey)
             // if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
             if (this.parent && !this.parent.transactionId) {
-                throw new Error(`Parent node must have a transactionId`)
+                throw new Error(`Parent node must have a transactionId (${this.nodeId})`)
             }
+            const metaKey = this.getMetanetKeyInBranch()
+            if (!metaKey) throw new Error(`node ${this.nodeDescription} has no Metanet Key in branch!`)
             return [
                 constants.META_PROTOCOL, 
                 //TODO: should never be blank
-                this.derivedKey?.Address.toString() || '',
+                metaKey.Address.toString(),
                 this.parent?.transactionId || 'NULL' 
             ]
         }
@@ -166,6 +191,9 @@ enum ThredzType {
 // abstract thredz node
 export abstract class ThredzNode extends MetaNode {
     public thredzType: ThredzType|null = null
+    get nodeDescription(): string {
+        return `${this.nodeType}:${this.thredzType}[${this.nodeId}]`
+    }
     logDetails() {
         console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
         this.children?.forEach(c => c.logDetails())
