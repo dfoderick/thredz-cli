@@ -59,12 +59,11 @@ vorpal
         const alreadyExists = folder.createUser(name)
         if (!alreadyExists) {
             const root: ThredzContainer = folder.mkdir()
-            const script = uploader.metaScript(root)
             console.log(root)
-            root.script = script
+            root.generateScript()
             const metanetNodeBuilt = await uploader.createTransaction(root)
             console.log(metanetNodeBuilt)
-            if (script) folder.stageWork(metanetNodeBuilt)
+            if (root.script) folder.stageWork(metanetNodeBuilt)
         }
         wallet.user = name
         wallet.writeWallet()
@@ -120,14 +119,13 @@ vorpal
         const newNode = folder.mkdir(name)
         //TODO: find the node with parent intact
         newNode.parent = parent
-        const script = uploader.metaScript(newNode)
+        newNode.generateScript()
         console.log(newNode)
         //TODO: refactor to buildandstage
-        newNode.script = script
         const metanetNodeBuilt = await uploader.createTransaction(newNode)
         console.log(metanetNodeBuilt)
         // TODO: transaction was created in parent, not subfolder
-        if (script) folder.stageWork(metanetNodeBuilt)
+        if (newNode.script) folder.stageWork(metanetNodeBuilt)
 
     }));
 vorpal

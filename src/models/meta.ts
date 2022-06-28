@@ -62,7 +62,9 @@ export abstract class MetaNode {
             nodeType:this.nodeType, 
             keyPath: this.keyPath, 
             transactionId: this.transactionId,
-            script: this.hex ? null : asHexStrings(this.script),
+            //script: this.hex ? null : asHexStrings(this.script),
+            //TODO: will this cause out of memory???
+            script: asHexStrings(this.script),
             hex: this.hex,
         }
     }
@@ -167,6 +169,11 @@ export abstract class ThredzNode extends MetaNode {
     logDetails() {
         console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
         this.children?.forEach(c => c.logDetails())
+    }
+    toPersistent() {
+        const sup = super.toPersistent()
+        if (!sup) return sup
+        return {...sup, thredzType: this.thredzType}
     }
 }
 

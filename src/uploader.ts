@@ -29,6 +29,8 @@ export class Uploader {
         this.wallet = wallet
         this.folder = folder
     }
+
+    // this will create nodes and stage transactions
     async prepare(fileName: string) {
         if (!fs.existsSync(fileName)) return {success: false, result:`File does not exists`}
         const content = fs.readFileSync(fileName)
@@ -55,9 +57,8 @@ export class Uploader {
         const test = true
         // navigate down the node tree and build all the scripts
         const script = node.generateScript()
-        console.log(`script`, script)
+        //console.log(`script`, script)
         const metanetNodeBuilt = await this.createTransaction(node)
-        //TODO visit each node
         let commits = null
         // navigate down the node tree and stage each node
         if (node.script) commits = this.folder.stageWork(metanetNodeBuilt)
@@ -92,10 +93,13 @@ export class Uploader {
 
     //create a transaction for the node, returns the updated node
     //navigate node children and build those nodes too
-    async createTransaction(node: MetaNode) {
+    async createTransaction(node: MetaNode, msw?: msWallet): Promise<MetaNode> {
         //await this.wallet.getBalance()
-        const msw: msWallet = this.getMoneyStreamWallet()
-        await msw.tryLoadWalletUtxos()
+        //TODO: make this work for recursive case!!!
+        if (!msw) msw = this.getMoneyStreamWallet()
+        if (msw.balance === 0) {
+            await msw.tryLoadWalletUtxos()
+        }
         if (msw.balance === 0) {
             throw new Error(`No funds available`)
         }
@@ -109,6 +113,7 @@ export class Uploader {
         if (Math.abs(buildResult.feeActual - buildResult.feeExpected) > 10) {
             //msw.logDetailsLastTx()
             //TODO: find a cleaner way to unspend the wallet utxo
+            // TODO: this will not work for recursive calls
             msw.clear()
             await msw.tryLoadWalletUtxos()
             console.log(`fees`, buildResult.feeActual, buildResult.feeExpected)
@@ -127,7 +132,11 @@ export class Uploader {
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected
-        //todo: save additional build result info???
+        //TODO: apply spent utxo to create chain of children!!!
+        // recursively generate for children too
+        for (const c of node.children) {
+            await this.createTransaction(c, msw)
+        }
         return node
     }
     logScript(script:any) {

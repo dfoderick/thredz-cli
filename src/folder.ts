@@ -22,6 +22,7 @@ export class Folder {
     }
     //todo: recursively find commits
     getcommitFileName() { return `${this.getuserFolder()}/${commitsFileName}` }
+    getBackupExtension() { return `.backup.${Date.now.toString()}`}
     getTransactionFileName(txid:string) { return `${this.currentPath}/${txFileNamePrefix}${txid}` }
 
     constructor() {
@@ -235,7 +236,7 @@ export class Folder {
                 jcurrent = JSON.parse(current.toString())
             } catch (err) {
                 //rename current to backup
-                fsextra.moveSync(this.getcommitFileName(), this.getcommitFileName()+'.backup')
+                fsextra.moveSync(this.getcommitFileName(), this.getcommitFileName()+this.getBackupExtension())
             }
         }
         // commit file will be an array of json MetaNode objects
