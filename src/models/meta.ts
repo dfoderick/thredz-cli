@@ -58,6 +58,9 @@ export abstract class MetaNode {
         if (this.transactionId) return this.transactionId
         return ''
     }
+    isEqual(another: any) {
+        return another.name === this.name
+    }
     get nodeDescription(): string {
         return `${this.nodeType}@${this.derivedKey?.Address||'UNK'}[${this.nodeId}]`
     }
@@ -68,7 +71,7 @@ export abstract class MetaNode {
         //if (child.parent) throw new Error(`addChild: parent is already set!!!`)
         if (!child.parent || child.parent["name"] !== this.name) child.parent = this
         // for now lookup by name
-        const found = this.children.find(c => {if (c.name === child.name) return c})
+        const found = this.children.find(c => {if (c.isEqual(this)) return c})
         if (!found) this.children.push(child)
     }
 
@@ -113,14 +116,10 @@ export abstract class MetaNode {
         return this.script
     }
     logDetails() { 
-        console.log(this.constructor.name, this.name, this.nodeType )
+        console.log(this.constructor.name, this.nodeId, this.name, this.nodeType )
         console.log(this.script)
         this.children?.forEach(c => c.logDetails())
     }
-    // visit(f:any) {
-    //     console.log(this.constructor.name, this.name, this.nodeType )
-    //     this.children?.forEach(c => c.logDetails())
-    // }
 
     async generateScript(afterScriptCallback?: any) {
         //const digest = OpenSPV.Hash.sha512(child.content)
@@ -143,43 +142,41 @@ export abstract class MetaNode {
             // 0x05
         ]
         opr.push(this.getContentScript())
-
-        //console.log(opr)
         this.script = asHexBuffers(opr)
         if (afterScriptCallback) await afterScriptCallback()
-        this.children.forEach(c => {
-            c.generateScript(afterScriptCallback)
-        })
+        for (const c of this.children) {
+            await c.generateScript(afterScriptCallback)
+        }
         return this.script
     }
 
-        // metanet protocol scripts
-        metaPreamble(): string[] {
-            // const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
-            // //console.log(`DERIVED`,derivedKey)
-            // if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
-            if (this.parent && !this.parent.transactionId) {
-                this.parent.logDetails()
-                throw new Error(`Parent node must have a transactionId (${this.nodeDescription})`)
-            }
-            const metaKey = this.getMetanetKeyInBranch()
-            if (!metaKey) throw new Error(`node ${this.nodeDescription} has no Metanet Key in branch!`)
-            return [
-                constants.META_PROTOCOL, 
-                //TODO: should never be blank
-                metaKey.Address.toString(),
-                this.parent?.transactionId || 'NULL' 
-            ]
+    // metanet protocol scripts
+    metaPreamble(): string[] {
+        // const derivedKey = this.wallet?.keyMeta?.deriveChild(child.keyPath)
+        // //console.log(`DERIVED`,derivedKey)
+        // if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
+        if (this.parent && !this.parent.transactionId) {
+            console.log(`LOGGING BEFORE ERROR`)
+            this.parent.logDetails()
+            throw new Error(`Parent node must have a transactionId (${this.nodeDescription})`)
         }
-            // thredz protocol scripts
-            thredzPreamble(): string[] {
-                if (!this.nodeType) throw new Error(`Node Type missing!`)
-                // thredz type(schema?)
-                return [
-                    constants.THREDZ_PROTOCOL, 
-                    this.nodeType,
-                ]
-            }
+        const metaKey = this.getMetanetKeyInBranch()
+        if (!metaKey) throw new Error(`node ${this.nodeDescription} has no Metanet Key in branch!`)
+        return [
+            constants.META_PROTOCOL, 
+            metaKey.Address.toString(),
+            this.parent?.transactionId || 'NULL' 
+        ]
+    }
+    // thredz protocol scripts
+    thredzPreamble(): string[] {
+        if (!this.nodeType) throw new Error(`Node Type missing!`)
+        // thredz type(schema?)
+        return [
+            constants.THREDZ_PROTOCOL, 
+            this.nodeType,
+        ]
+    }
     
 }
 
@@ -194,14 +191,14 @@ enum ThredzType {
     Script = "script",
   }
 
-// abstract thredz node
+// base node for all threads nodes
 export abstract class ThredzNode extends MetaNode {
     public thredzType: ThredzType|null = null
     get nodeDescription(): string {
         return `${this.nodeType}:${this.thredzType}[${this.nodeId}]`
     }
     logDetails() {
-        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        console.log(this.constructor.name, this.nodeId, this.name, this.nodeType, this.thredzType ) 
         this.children?.forEach(c => c.logDetails())
     }
     toPersistent() {
@@ -217,20 +214,20 @@ export class ThredzContainer extends ThredzNode {
         this.thredzType = ThredzType.Container
     }
     logDetails() {
-        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        console.log(this.constructor.name, this.nodeId, this.name, this.nodeType, this.thredzType ) 
         this.children?.forEach(c => c.logDetails())
     }
 }
 
 export class ThredzContent extends ThredzNode {
-    // full content if all content in node
+    // full content if all content fits in node
     content: Buffer | null = null
     constructor(name:string) {
         super(name)
         this.thredzType = ThredzType.Content
     }
     logDetails() {
-        console.log(this.constructor.name, this.name, this.nodeType, this.thredzType ) 
+        console.log(this.constructor.name, this.nodeId, this.name, this.nodeType, this.thredzType ) 
         this.children?.forEach(c => c.logDetails())
     }
     prepareContent() {
@@ -238,10 +235,8 @@ export class ThredzContent extends ThredzNode {
         if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
             //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
             const bcat = new BcatNode(this.name)
-            //bcat.parent = this
             this.addChild(bcat)
-            //TODO: explode the node into subnodes here
-            // bcat parts
+            // explode the node into bcat parts subnodes here
             bcat.contentChunks = chunkBuffer(this.content, constants.MAX_BYTES_PER_TRANSACTION)
             console.log(`chunks`, bcat.contentChunks)
             for (let i =0; i< bcat.contentChunks.length; i++) {
@@ -269,10 +264,10 @@ export class ThredzContent extends ThredzNode {
 
 // Any number of arguments can follow providing a sequence of transaction IDs (TXn) in the order of how data is to be represented in the file. To be a valid Bcat transaction all transaction IDs (TX1, TX2, ... TXn) must be unique, unless using the creative flag.
 
-
         } else {
-            console.log(`CONTENT LENGTH`, this.content.length)
+            //console.log(`CONTENT LENGTH`, this.content.length)
             const child = new BNode(this.name)
+            child.partNumber = 1
             this.addChild(child)
         }
         // this.logDetails()
@@ -312,8 +307,19 @@ export class BcatNode extends MetaNode {
         this.nodeType = NodeType.Container
     }
     logDetails() {
-        console.log(this.constructor.name, this.name, this.nodeType ) 
+        console.log(this.constructor.name, this.nodeId, this.name, this.nodeType ) 
         this.children?.forEach(c => c.logDetails())
+    }
+    addChild(child: BNode) {
+        if (!child) return false
+        //TODO: make sure node is not already in the children!!!
+        //i.e. identity map
+        //if (child.parent) throw new Error(`addChild: parent is already set!!!`)
+        if (!child.parent || child.parent["name"] !== this.name) child.parent = this
+        // for now lookup by name
+        const found = this.children.find(c => {if (c.isEqual(child)) return c})
+        if (!found) this.children.push(child)
+        //console.log(`addChild`, found)
     }
 }
 
@@ -325,6 +331,13 @@ export class BNode extends MetaNode {
     constructor(name:string) {
         super(name)
         this.nodeType = NodeType.Content
+    }
+    isEqual(another: any) {
+        if (another instanceof BNode) {
+            return (another.name === this.name && another.partNumber === this.partNumber)
+        }
+        if (another instanceof MetaNode) return super.isEqual(another)
+        return false
     }
     getContentScript() {
         //TODO: set encoding and mediaType
@@ -344,7 +357,7 @@ export class BNode extends MetaNode {
         }
     }
     logDetails() {
-        console.log(this.constructor.name, `Part ${this.partNumber}`, this.name, this.nodeType ) 
+        console.log(this.constructor.name, `Part ${this.partNumber}`, this.nodeId, this.name, this.nodeType ) 
         if (this.content) {
             console.log(`media size encrypted`, this.content?.length)
             console.log(`      media size x 2`, (this.content?.length||0)*2)

@@ -60,7 +60,7 @@ export class Uploader {
         // navigate down the node tree and build all the scripts
         if (!node.derivedKey) throw new Error(`cannot generate script without a meta key!`)
         const msw = this.getMoneyStreamWallet()
-        const script = node.generateScript(async () => {
+        const script = await node.generateScript(async () => {
             console.log(`BEFORE GENERATESCRIPT CALLBACK`)
             const metanetNodeBuilt = await this.createTransaction(node, msw, false)
             console.log(`AFTER GENERATESCRIPT CALLBACK`)
@@ -213,7 +213,7 @@ export class Uploader {
 
     async buildAndStage(node:MetaNode) {
         //node.script = this.metaScript(node)
-        node.generateScript()
+        await node.generateScript()
         const metanetNodeBuilt = await this.createTransaction(node)
         if (node.script) this.folder.stageWork(metanetNodeBuilt)
         return metanetNodeBuilt

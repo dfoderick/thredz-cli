@@ -15,4 +15,5 @@ import * as fs from 'fs-extra'
     const uploader = new Uploader(wallet, folder)
     const result = await uploader.prepare('./media/bunny_full_low.mp4')
     console.log(`UPLOAD RESULT`, result.success, result.result.commits)
+    result.result.node.logDetails()
 })()

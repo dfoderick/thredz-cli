@@ -3,7 +3,7 @@ import {Folder} from "../src/folder"
 import {Uploader} from "../src/uploader"
 import {Wallet} from "../src/wallet"
 
-test('generates a root script', () => {
+test('generates a root script', async () => {
     const wallet = Wallet.fromRandom()
     const folder = new Folder()
     folder.user="dave"
@@ -11,13 +11,13 @@ test('generates a root script', () => {
     const node: MetaNode = new ThredzContainer(folder.getuserFolder())
     node.derivedKey = wallet.keyMeta
     expect(node.derivedKey).toBeDefined()
-    node.generateScript()
+    await node.generateScript()
     expect(node.script).toBeDefined()
     expect(node.script[2].toString()).toBe('NULL')
     expect(node.script[3].toString()).toBe('thredz')
   });
 
-  test('generates a subfolder script', () => {
+  test('generates a subfolder script', async () => {
     const wallet = Wallet.fromRandom()
     const folder = new Folder()
     folder.user="parent"
@@ -29,7 +29,7 @@ test('generates a root script', () => {
     const child: MetaNode = folder.mkdir('subfolder')
     child.parent = parent
     expect(child.parent.transactionId).toBe("PARENTTRANSACTIONID")
-    child.generateScript()
+    await child.generateScript()
     expect(child.script).toBeDefined()
     expect(child.parent.transactionId).toBe("PARENTTRANSACTIONID")
     expect(child.script[2].toString()).toBe('PARENTTRANSACTIONID')

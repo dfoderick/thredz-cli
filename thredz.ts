@@ -60,7 +60,7 @@ vorpal
         if (!alreadyExists) {
             const root: ThredzContainer = folder.mkdir()
             console.log(root)
-            root.generateScript()
+            await root.generateScript()
             const metanetNodeBuilt = await uploader.createTransaction(root)
             console.log(metanetNodeBuilt)
             if (root.script) folder.stageWork(metanetNodeBuilt)
@@ -119,7 +119,7 @@ vorpal
         const newNode = folder.mkdir(name)
         //TODO: find the node with parent intact
         newNode.parent = parent
-        newNode.generateScript()
+        await newNode.generateScript()
         console.log(newNode)
         //TODO: refactor to buildandstage
         const metanetNodeBuilt = await uploader.createTransaction(newNode)
