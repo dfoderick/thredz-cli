@@ -59,12 +59,17 @@ export abstract class MetaNode {
         return ''
     }
     get nodeDescription(): string {
-        return `${this.nodeType}[${this.nodeId}]`
+        return `${this.nodeType}@${this.derivedKey?.Address||'UNK'}[${this.nodeId}]`
     }
-    addChild(node: MetaNode) {
+    addChild(child: MetaNode) {
+        if (!child) return false
         //TODO: make sure node is not already in the children!!!
         //i.e. identity map
-        this.children.push(node)
+        //if (child.parent) throw new Error(`addChild: parent is already set!!!`)
+        if (!child.parent || child.parent["name"] !== this.name) child.parent = this
+        // for now lookup by name
+        const found = this.children.find(c => {if (c.name === child.name) return c})
+        if (!found) this.children.push(child)
     }
 
     // get metanet key controlling this branch of nodes
@@ -117,7 +122,7 @@ export abstract class MetaNode {
     //     this.children?.forEach(c => c.logDetails())
     // }
 
-    generateScript() {
+    async generateScript(afterScriptCallback?: any) {
         //const digest = OpenSPV.Hash.sha512(child.content)
         //   OP_RETURN
         //   19HxigV4QyBv3tHpQVcUEQyq1pzZVdoAut
@@ -141,9 +146,9 @@ export abstract class MetaNode {
 
         //console.log(opr)
         this.script = asHexBuffers(opr)
-
+        if (afterScriptCallback) await afterScriptCallback()
         this.children.forEach(c => {
-            c.generateScript()
+            c.generateScript(afterScriptCallback)
         })
         return this.script
     }
@@ -154,7 +159,8 @@ export abstract class MetaNode {
             // //console.log(`DERIVED`,derivedKey)
             // if (!derivedKey?.Address) throw new Error(`METAnet protocol rerquire address ${derivedKey?.Address}`)
             if (this.parent && !this.parent.transactionId) {
-                throw new Error(`Parent node must have a transactionId (${this.nodeId})`)
+                this.parent.logDetails()
+                throw new Error(`Parent node must have a transactionId (${this.nodeDescription})`)
             }
             const metaKey = this.getMetanetKeyInBranch()
             if (!metaKey) throw new Error(`node ${this.nodeDescription} has no Metanet Key in branch!`)
@@ -232,6 +238,7 @@ export class ThredzContent extends ThredzNode {
         if (this.content.length > constants.MAX_BYTES_PER_TRANSACTION) {
             //throw new Error(`FILE SIZE TOO BIG. USE BCAT`)
             const bcat = new BcatNode(this.name)
+            //bcat.parent = this
             this.addChild(bcat)
             //TODO: explode the node into subnodes here
             // bcat parts
@@ -264,10 +271,11 @@ export class ThredzContent extends ThredzNode {
 
 
         } else {
+            console.log(`CONTENT LENGTH`, this.content.length)
             const child = new BNode(this.name)
             this.addChild(child)
         }
-        this.logDetails()
+        // this.logDetails()
     }
     // A threadz content is (usually) a parent pointer to a b or bcat content txn
     // it will not hold content itself
@@ -277,17 +285,18 @@ export class ThredzContent extends ThredzNode {
     //     // this.children.forEach(c => c.getContentScript())
     //     // return result
     // }
-    generateScript() {
+    async generateScript(afterScriptCallback?: any) {
         const opr: any[] = [
             ...this.metaPreamble(),
             //TODO: only if thredz node
             ...this.thredzPreamble(),
         ]
         //opr.push(this.getContentScript())
-        //console.log(opr)
         this.script = asHexBuffers(opr)
+        if (afterScriptCallback) await afterScriptCallback()
         this.children.forEach(c => {
-            c.generateScript()
+            // TODO: parents need to have transaction generatred before children!!!
+            c.generateScript(afterScriptCallback)
         })
         return this.script
     }

@@ -49,7 +49,7 @@ export class Uploader {
         // node is thredz content
         const node: ThredzContent = new ThredzContent(fileName)
         node.parent = this.folder.currentNode
-        //TODO: sort out derived key and metanet
+        //TODO: sort out derived key and metanet key
         node.derivedKey = this.wallet.keyMeta
         // node content is encrypted content
         node.content = encContent
@@ -59,13 +59,17 @@ export class Uploader {
         const test = true
         // navigate down the node tree and build all the scripts
         if (!node.derivedKey) throw new Error(`cannot generate script without a meta key!`)
-        const script = node.generateScript()
-        //console.log(`script`, script)
-        const metanetNodeBuilt = await this.createTransaction(node)
+        const msw = this.getMoneyStreamWallet()
+        const script = node.generateScript(async () => {
+            console.log(`BEFORE GENERATESCRIPT CALLBACK`)
+            const metanetNodeBuilt = await this.createTransaction(node, msw, false)
+            console.log(`AFTER GENERATESCRIPT CALLBACK`)
+        })
+        const metanetNodeBuilt = await this.createTransaction(node, msw)
         let commits = null
         // navigate down the node tree and stage each node
         if (node.script) commits = this.folder.stageWork(metanetNodeBuilt)
-        //TODO: should always create 2 or more commits. one for thredz one for b or bcat
+        //should always create 2 or more commits. one for thredz content one for b or bcat
         return {commits: commits, node:metanetNodeBuilt}
     }
 
@@ -96,7 +100,7 @@ export class Uploader {
 
     //create a transaction for the node, returns the updated node
     //navigate node children and build those nodes too
-    async createTransaction(node: MetaNode, msw?: msWallet): Promise<MetaNode> {
+    async createTransaction(node: MetaNode, msw?: msWallet, dochildren = true): Promise<MetaNode> {
         //await this.wallet.getBalance()
         //TODO: make this work for recursive case!!!
         if (!msw) msw = this.getMoneyStreamWallet()
@@ -135,10 +139,12 @@ export class Uploader {
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected
-        //TODO: apply spent utxo to create chain of children!!!
+        //TODO: apply spent utxo to create chain of children!
         // recursively generate for children too
-        for (const c of node.children) {
-            await this.createTransaction(c, msw)
+        if (dochildren) {
+            for (const c of node.children) {
+                await this.createTransaction(c, msw)
+            }
         }
         return node
     }
