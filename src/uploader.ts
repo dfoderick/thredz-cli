@@ -5,7 +5,7 @@ import OpenSPV from 'openspv';
 import * as fs from "fs-extra";
 import { BNode, MetaNode, ThredzContent } from "./models/meta";
 import constants from "./constants";
-import { IndexingService, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
+import { IndexingService, OutputCollection, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
 import { WalletStorage } from "./walletstorage";
 import Long from "long";
@@ -60,15 +60,22 @@ export class Uploader {
         // navigate down the node tree and build all the scripts
         if (!node.derivedKey) throw new Error(`cannot generate script without a meta key!`)
         const msw = this.getMoneyStreamWallet()
+        const utxosused:OutputCollection = new OutputCollection()
         let firstmetanetNodeBuilt:any = null
         const script = await node.generateScript(async (nodecallback:any) => {
             console.log(`BEFORE GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
             const lastnode = await this.createTransaction(nodecallback, msw, false)
+            const before = utxosused.count
+            if (lastnode.utxos) utxosused.addOutputs(lastnode.utxos)
+            if (utxosused.count < before + (lastnode.utxos?.count||0)) {
+                throw new Error(`UTXO CANNOT BE SPENT TWICE!!! ${JSON.stringify(lastnode.utxos?.firstItem)}`)
+            }
             console.log(`AFTER GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
             if (!firstmetanetNodeBuilt) firstmetanetNodeBuilt = lastnode
         })
         // console.log(`AFTER GENERATESCRIPT`, metanetNodeBuilt)
         node.validate()
+            console.log(`utxos`, utxosused.items)
         //const metanetNodeBuilt = await this.createTransaction(node, msw)
         let commits = null
         // navigate down the node tree and stage each node
@@ -125,6 +132,7 @@ export class Uploader {
             //msw.logDetailsLastTx()
             //TODO: find a cleaner way to unspend the wallet utxo
             // TODO: this will not work for recursive calls
+            console.log(`WALLET CLEAR`,`EXPECT ERROR`)
             msw.clear()
             await msw.tryLoadWalletUtxos()
             console.log(`fees`, buildResult.feeActual, buildResult.feeExpected)
@@ -133,18 +141,15 @@ export class Uploader {
             console.log(`skipped rebuild`, buildResult.feeActual - buildResult.feeExpected)
         }
         //msw.logDetailsLastTx()
-        //console.log(buildResult.tx.txOuts[0])
-        // buildResult.tx.txOuts.forEach((o:any) => {
-        //     this.logScript(o.script)
-        // })
-        //node.logDetails()
-        //console.log(`    transaction size`, buildResult.hex.length)
         node.transactionId = buildResult?.tx?.id().toString('hex')
         console.log(`built`, node.nodeDescription)
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected
+        node.utxos = buildResult.utxos
         //TODO: apply spent utxo to create chain of children!
+        // assumes spent index is always index 1
+        if (node.utxos) msw.spendUtxos(node.utxos, buildResult.tx, 1, node.transactionId)
         // recursively generate for children too
         if (dochildren) {
             for (const c of node.children) {

@@ -1,3 +1,4 @@
+import { OutputCollection } from 'moneystream-wallet'
 import constants from '../constants'
 import { KeyPair } from '../key'
 import { asHexBuffers, asHexStrings, chunkBuffer, chunkSubstr } from '../utils'
@@ -38,6 +39,7 @@ export abstract class MetaNode {
     fee?: number
     // expected fee based on transaction size. should be close to fee
     feeExpected?: number
+    utxos?: OutputCollection 
     isPersisted = false
 
     constructor(name:string) {
@@ -85,7 +87,6 @@ export abstract class MetaNode {
     toPersistent() {
         //TODO: figure out if already persisted
         if (this.isPersisted) return null
-        // this.isPersisted = true //?
         return {
             parent: this.parent?.nodeId,
             id: this.nodeId,
@@ -97,6 +98,8 @@ export abstract class MetaNode {
             //TODO: will this cause out of memory???
             //script: asHexStrings(this.script),
             hex: this.hex,
+            fee: this.fee,
+            feeExpected: this.feeExpected
         }
     }
 
