@@ -143,7 +143,7 @@ export abstract class MetaNode {
         ]
         opr.push(this.getContentScript())
         this.script = asHexBuffers(opr)
-        if (afterScriptCallback) await afterScriptCallback()
+        if (afterScriptCallback) await afterScriptCallback(this)
         for (const c of this.children) {
             await c.generateScript(afterScriptCallback)
         }
@@ -177,7 +177,19 @@ export abstract class MetaNode {
             this.nodeType,
         ]
     }
-    
+
+    // validate that metanet strucutre is correct
+    validate() {
+        if (!this.nodeId) throw new Error(`MetaNode must have a nodeId`)
+        if (!this.hex) throw new Error(`MetaNode must have a transaction hex`)
+        if (this.parent) {
+            if (!this.parent.nodeId) throw new Error(`MetaNode parent must have nodeId`)
+            if (!this.parent.hex) throw new Error(`MetaNode parent must have hex`)
+        }
+        this.children.forEach(c => {
+            c.validate()
+        })
+    }
 }
 
 // type of thredz nodes
@@ -288,11 +300,11 @@ export class ThredzContent extends ThredzNode {
         ]
         //opr.push(this.getContentScript())
         this.script = asHexBuffers(opr)
-        if (afterScriptCallback) await afterScriptCallback()
-        this.children.forEach(c => {
+        if (afterScriptCallback) await afterScriptCallback(this)
+        for (const c of this.children) {
             // TODO: parents need to have transaction generatred before children!!!
-            c.generateScript(afterScriptCallback)
-        })
+            await c.generateScript(afterScriptCallback)
+        }
         return this.script
     }
 }

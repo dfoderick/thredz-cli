@@ -60,17 +60,21 @@ export class Uploader {
         // navigate down the node tree and build all the scripts
         if (!node.derivedKey) throw new Error(`cannot generate script without a meta key!`)
         const msw = this.getMoneyStreamWallet()
-        const script = await node.generateScript(async () => {
-            console.log(`BEFORE GENERATESCRIPT CALLBACK`)
-            const metanetNodeBuilt = await this.createTransaction(node, msw, false)
-            console.log(`AFTER GENERATESCRIPT CALLBACK`)
+        let firstmetanetNodeBuilt:any = null
+        const script = await node.generateScript(async (nodecallback:any) => {
+            console.log(`BEFORE GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
+            const lastnode = await this.createTransaction(nodecallback, msw, false)
+            console.log(`AFTER GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
+            if (!firstmetanetNodeBuilt) firstmetanetNodeBuilt = lastnode
         })
-        const metanetNodeBuilt = await this.createTransaction(node, msw)
+        // console.log(`AFTER GENERATESCRIPT`, metanetNodeBuilt)
+        node.validate()
+        //const metanetNodeBuilt = await this.createTransaction(node, msw)
         let commits = null
         // navigate down the node tree and stage each node
-        if (node.script) commits = this.folder.stageWork(metanetNodeBuilt)
+        if (node.script) commits = this.folder.stageWork(firstmetanetNodeBuilt)
         //should always create 2 or more commits. one for thredz content one for b or bcat
-        return {commits: commits, node:metanetNodeBuilt}
+        return {commits: commits, node:firstmetanetNodeBuilt}
     }
 
     //test a simple spend
@@ -130,12 +134,13 @@ export class Uploader {
         }
         //msw.logDetailsLastTx()
         //console.log(buildResult.tx.txOuts[0])
-        buildResult.tx.txOuts.forEach((o:any) => {
-            this.logScript(o.script)
-        })
-        node.logDetails()
-        console.log(`    transaction size`, buildResult.hex.length)
+        // buildResult.tx.txOuts.forEach((o:any) => {
+        //     this.logScript(o.script)
+        // })
+        //node.logDetails()
+        //console.log(`    transaction size`, buildResult.hex.length)
         node.transactionId = buildResult?.tx?.id().toString('hex')
+        console.log(`built`, node.nodeDescription)
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected
