@@ -236,7 +236,12 @@ export class Folder {
                 jcurrent = JSON.parse(current.toString())
             } catch (err) {
                 //rename current to backup
-                fsextra.moveSync(this.getcommitFileName(), this.getcommitFileName()+this.getBackupExtension())
+                const dest = this.getcommitFileName()+this.getBackupExtension()
+                if (fsextra.existsSync(dest)) {
+                    console.log(`removing backup`, dest)
+                    fsextra.rmSync(dest)
+                }
+                fsextra.moveSync(this.getcommitFileName(), dest)
             }
         }
         // commit file will be an array of json MetaNode objects
