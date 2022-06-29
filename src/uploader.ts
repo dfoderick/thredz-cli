@@ -63,19 +63,20 @@ export class Uploader {
         const utxosused:OutputCollection = new OutputCollection()
         let firstmetanetNodeBuilt:any = null
         const script = await node.generateScript(async (nodecallback:any) => {
-            console.log(`BEFORE GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
+            // console.log(`BEFORE GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
             const lastnode = await this.createTransaction(nodecallback, msw, false)
             const before = utxosused.count
             if (lastnode.utxos) utxosused.addOutputs(lastnode.utxos)
-            if (utxosused.count < before + (lastnode.utxos?.count||0)) {
+            // must add only one additional utxo
+            if (utxosused.count < before + 1) {
                 throw new Error(`UTXO CANNOT BE SPENT TWICE!!! ${JSON.stringify(lastnode.utxos?.firstItem)}`)
             }
-            console.log(`AFTER GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
+            // console.log(`AFTER GENERATESCRIPT CALLBACK`, nodecallback.nodeId)
             if (!firstmetanetNodeBuilt) firstmetanetNodeBuilt = lastnode
         })
         // console.log(`AFTER GENERATESCRIPT`, metanetNodeBuilt)
         node.validate()
-            console.log(`utxos`, utxosused.items)
+        console.log(`utxos`, utxosused.items)
         //const metanetNodeBuilt = await this.createTransaction(node, msw)
         let commits = null
         // navigate down the node tree and stage each node
@@ -127,29 +128,48 @@ export class Uploader {
         const payTo = Script.fromSafeDataArray(node.script) //new Script(node.script)
         console.log(`script for meta node has`, payTo.chunks.length,`chunks`)
         //data will get added if payto is a Script object
+        const originalbalance = msw.balance 
+        //console.log(`CHANGE ADDRESS`, msw._keypair.toAddress().toString())
         let buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,fee)
         if (Math.abs(buildResult.feeActual - buildResult.feeExpected) > 10) {
-            //msw.logDetailsLastTx()
-            //TODO: find a cleaner way to unspend the wallet utxo
-            // TODO: this will not work for recursive calls
-            console.log(`WALLET CLEAR`,`EXPECT ERROR`)
-            msw.clear()
-            await msw.tryLoadWalletUtxos()
+            //unspend the wallet utxo that are on enumbered
+            msw.selectedUtxos.items.forEach(u => {
+                if (u.status==="hold") {
+                    u.unencumber()
+                    console.log(`UTXO MADE UNSPENT`)
+                }
+            })
+            if (msw.balance < buildResult.feeExpected) throw new Error(`WALLET RAN OUT OF FUNDS. balance ${msw.balance} need ${buildResult.feeExpected}`)
             console.log(`fees`, buildResult.feeActual, buildResult.feeExpected)
             buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,buildResult.feeExpected)
         } else {
             console.log(`skipped rebuild`, buildResult.feeActual - buildResult.feeExpected)
         }
-        //msw.logDetailsLastTx()
         node.transactionId = buildResult?.tx?.id().toString('hex')
         console.log(`built`, node.nodeDescription)
         node.hex = buildResult.hex
         node.fee = buildResult.feeActual
         node.feeExpected = buildResult.feeExpected
         node.utxos = buildResult.utxos
+        const actualFeePerKb = node.fee||1e8 / node.hex.length * 1024
+        //msw.logDetailsLastTx()
+        if (actualFeePerKb > constants.FEEPERKBNUM*2) {
+            //throw new Error(`Paying too much for ${node.hex.length} bytes! ${actualFeePerKb} > ${constants.FEEPERKBNUM*2}`)
+        } else {
+            console.log(`Paid ${actualFeePerKb} (${constants.FEEPERKBNUM*2})`)
+        }
         //TODO: apply spent utxo to create chain of children!
         // assumes spent index is always index 1
-        if (node.utxos) msw.spendUtxos(node.utxos, buildResult.tx, 1, node.transactionId)
+        
+        if (node.utxos) {
+            //msw.logDetailsLastTx()
+            const changeUtxo = 1
+            msw.spendUtxos(node.utxos, buildResult.tx, changeUtxo, node.transactionId)
+            msw.selectedUtxos.items.forEach(u => {
+                console.log(`utxo`, u)
+            })
+        }
+
         // recursively generate for children too
         if (dochildren) {
             for (const c of node.children) {

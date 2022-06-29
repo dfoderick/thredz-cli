@@ -5368,10 +5368,10 @@ mkdirp@^0.5.1, mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.6"
 
-moneystream-wallet@^0.2.17:
-  version "0.2.17"
-  resolved "https://registry.yarnpkg.com/moneystream-wallet/-/moneystream-wallet-0.2.17.tgz#8373821a2477c63400dd2f4cce68ce11227d5f1d"
-  integrity sha512-CRpe9RLXChg3e99jkLF5zSfJSRu+rkfnOUJoxPCJ76RAZ0uo4tzIzLGPWjPhuIn9mFhTuTGO7+e4rfpz7FGesA==
+moneystream-wallet@^0.2.18:
+  version "0.2.18"
+  resolved "https://registry.yarnpkg.com/moneystream-wallet/-/moneystream-wallet-0.2.18.tgz#478b5d6994212d02e9a9aa019c9de3ac70dfb50e"
+  integrity sha512-4F3/mtGGCagP1vJ0UDUNwcrwhkDZl6b5cJdEzNtOgKwa6TNwBjO3bojs5aJ8uMItY977l6HS3CzfGP6jAc52gw==
   dependencies:
     "@types/crypto-js" "^3.1.47"
     "@types/node-fetch" "^2.5.7"
