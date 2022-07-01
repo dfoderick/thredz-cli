@@ -30,7 +30,7 @@
     "fs-extra": "^10.1.0",
     "hyperswarm": "^2.15.3",
     "long": "^5.2.0",
-    "moneystream-wallet": "^0.2.18",
+    "moneystream-wallet": "^0.2.19",
     "node-fetch": "^3.2.5",
     "openspv": "^3.0.29"
   },
