@@ -64,7 +64,7 @@ export abstract class MetaNode {
         return another.name === this.name
     }
     get nodeDescription(): string {
-        return `${this.nodeType}@${this.derivedKey?.Address||'UNK'}[${this.nodeId}]`
+        return `${this.nodeType}@${this.derivedKey?.Address.toString()||'UNK'}[${this.nodeId}]`
     }
     addChild(child: MetaNode) {
         if (!child) return false
@@ -167,17 +167,20 @@ export abstract class MetaNode {
         if (!metaKey) throw new Error(`node ${this.nodeDescription} has no Metanet Key in branch!`)
         return [
             constants.META_PROTOCOL, 
-            metaKey.Address.toString(),
+            metaKey.Address.toString('hex'),
+            // parent.transactionid has to be in proper endian!!!
             this.parent?.transactionId || 'NULL' 
         ]
     }
     // thredz protocol scripts
+    // TODO: should be on thredz type
     thredzPreamble(): string[] {
         if (!this.nodeType) throw new Error(`Node Type missing!`)
         // thredz type(schema?)
         return [
             constants.THREDZ_PROTOCOL, 
             this.nodeType,
+            this.keyPath
         ]
     }
 
@@ -208,7 +211,7 @@ enum ThredzType {
 
 // base node for all threads nodes
 export abstract class ThredzNode extends MetaNode {
-    public thredzType: ThredzType|null = null
+    public thredzType: ThredzType = ThredzType.Container
     get nodeDescription(): string {
         return `${this.nodeType}:${this.thredzType}[${this.nodeId}]`
     }
@@ -221,12 +224,27 @@ export abstract class ThredzNode extends MetaNode {
         if (!sup) return sup
         return {...sup, thredzType: this.thredzType}
     }
+    thredzPreamble(): string[] {
+        if (!this.nodeType) throw new Error(`Node Type missing!`)
+        // thredz type(schema?)
+        return [
+            constants.THREDZ_PROTOCOL, 
+            this.thredzType.toString(),
+            this.keyPath
+        ]
+    }
+
 }
 
 export class ThredzContainer extends ThredzNode {
     constructor(name:string) {
         super(name)
         this.thredzType = ThredzType.Container
+    }
+    static fromJson(j:any) {
+        const t = new ThredzContainer(j.name)
+        t.transactionId = j.transactionId
+        return t
     }
     logDetails() {
         console.log(this.constructor.name, this.nodeId, this.name, this.nodeType, this.thredzType ) 

@@ -1,6 +1,8 @@
 // node18 has its own fetch
 //import fetch from 'node-fetch';
 
+import constants from "../src/constants";
+
 export class Indexer {
       // get utxos for an address
   async getUtxos(address: string) {
@@ -15,16 +17,20 @@ export class Indexer {
     if (Buffer.isBuffer(tx)) {
       tx = tx.toString('hex');
     }
-    //const url = `https://www.whatsonchain.com/v1/bsv/main/tx/raw`
-    //const url = `https://api.taal.com/api/v1/broadcast`;
-    const url = `https://mapi.gorillapool.io/mapi/tx`
-    console.log(`URL`, url);
+    let url = `https://www.whatsonchain.com/v1/bsv/main/tx/raw`
+    if (constants.BROADCASTER === 'taal') {
+      url = `https://api.taal.com/api/v1/broadcast`;
+    }
+    if (constants.BROADCASTER === 'gorilla') {
+      url = `https://mapi.gorillapool.io/mapi/tx`
+    }
+    console.log(`URL`, url)
 
     const fcreate = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        //Authorization: process.env.TAAL_APIKEY,
+        'Authorization' : process.env.TAAL_APIKEY||'',
       },
       body: JSON.stringify({
         rawTx: tx,

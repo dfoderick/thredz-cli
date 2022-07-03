@@ -10,12 +10,12 @@ export class KeyPair {
         return this.key?.privKey
     }
 
-    get Address():string { 
+    get Address(): typeof OpenSPV.Address { 
         const address = new OpenSPV.Address()
         const pub = this.key?.toPublic()
         pub.compressed = false
         address.fromPubKey(pub, 'mainnet')
-        return address.toString()
+        return address
     }
     static fromRandom() {
         const k = new KeyPair()

@@ -89,7 +89,8 @@ export class Folder {
         const txns = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
         const ourFolder = path.basename(this.currentPath)
         const ourNode = txns?.find(t => {return t.name === ourFolder})
-        return ourNode
+        const ourMeta = ourNode ? ThredzContainer.fromJson(ourNode) : null
+        return ourMeta
     }
 
     tree(filterFileName?:string) {

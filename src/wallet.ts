@@ -37,7 +37,7 @@ export class Wallet {
     }
 
     // Address for writing to metanet
-    get AddressMeta() { return this.keyMeta?.Address }
+    get AddressMeta():string|undefined { return this.keyMeta?.Address.toString() }
     get PublicKeyMeta() { return this.keyMeta?.PublicKey }
     get PrivateKeyMeta() { return this.keyMeta?.PrivateKey }
 

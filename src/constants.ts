@@ -1,8 +1,8 @@
 export default class constants {
     // woc, taal, gorilla
-    static BROADCASTER = 'gorilla'
+    static BROADCASTER = 'taal'
     // fee is per broadcast service
-    static FEEPERKBNUM = parseInt(process.env.FEEPERKBNUM||'5',10)
+    static FEEPERKBNUM = parseInt(process.env.FEEPERKBNUM||'5',5)
     static WALLET_FILE_NAME = './.thredz'
     // testing gorilla > 10MB. worked with 22 MB
     // static MAX_BYTES_PER_TRANSACTION = 99900000

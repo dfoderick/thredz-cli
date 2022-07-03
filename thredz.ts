@@ -116,6 +116,7 @@ vorpal
     .command('mkdir <name>', 'create a directory/folder')
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         const parent = folder.currentNode
+        if (parent) parent!.derivedKey = wallet.keyMeta
         const newNode = folder.mkdir(name)
         //TODO: find the node with parent intact
         newNode.parent = parent
