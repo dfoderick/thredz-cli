@@ -2215,9 +2215,9 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
-"bsv@git+https://github.com/moneystreamdev/bsv.git":
+"bsv@https://github.com/moneystreamdev/bsv":
   version "2.0.0-beta.39"
-  resolved "git+https://github.com/moneystreamdev/bsv.git#ee42a6ac323d74de36f277d8c8728193c29c84cf"
+  resolved "https://github.com/moneystreamdev/bsv#ee42a6ac323d74de36f277d8c8728193c29c84cf"
   dependencies:
     aes "0.1.0"
     bitcoin-elliptic "^7.0.1"
@@ -7468,6 +7468,15 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
+
+thredz-lib@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/thredz-lib/-/thredz-lib-1.0.7.tgz#103d7e52c841f4439854ad6296992e3030fac5b7"
+  integrity sha512-nIIQJjWv2FZWdMnOqFcRkNQfQC0AVDvw+200u1t13SnIiEAN48OLFLemz3edRayMBZ5x1IiQEBNN1/58BuQZug==
+  dependencies:
+    dotenv "^16.0.1"
+    long "^5.2.0"
+    moneystream-wallet "^0.2.19"
 
 throat@^6.0.1:
   version "6.0.1"

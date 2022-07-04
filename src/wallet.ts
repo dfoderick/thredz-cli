@@ -1,5 +1,6 @@
 import OpenSPV from 'openspv';
-import { KeyPair } from "./key";
+//import { KeyPair } from "thredz-lib/src/key";
+import * as thredz from 'thredz-lib'
 import * as fs from "fs-extra";
 import constants from "./constants";
 import { Indexer } from "./indexer";
@@ -8,9 +9,9 @@ import { Indexer } from "./indexer";
 export class Wallet {
     indexer: Indexer = new Indexer()
     // this is the master key for metanet owner
-    keyMeta: KeyPair | null = null
+    keyMeta: thredz.KeyPair | null = null
     // this is the funding key for transaction purse
-    keyFunding: KeyPair | null = null
+    keyFunding: thredz.KeyPair | null = null
     user: string = ''
     utxos: any = []
 
@@ -22,8 +23,8 @@ export class Wallet {
 
     static fromRandom() {
         const w = new Wallet()
-        w.keyMeta = KeyPair.fromRandom()
-        w.keyFunding = KeyPair.fromRandom()
+        w.keyMeta = thredz.KeyPair.fromRandom()
+        w.keyFunding = thredz.KeyPair.fromRandom()
         return w
     }
 
@@ -48,7 +49,7 @@ export class Wallet {
     }
 
     // private key used for funding
-    get KeyPairFundingDerived(): KeyPair | undefined { 
+    get KeyPairFundingDerived(): thredz.KeyPair | undefined { 
         const privk = this.keyFunding
         return privk?.derive(constants.FUNDING_DERIVATION_PATH)
     }
@@ -88,8 +89,8 @@ export class Wallet {
         const useFile = fileName || constants.WALLET_FILE_NAME
         const w = new Wallet()
         if (!fs.existsSync(useFile)) {
-            w.keyMeta = KeyPair.fromRandom();
-            w.keyFunding = KeyPair.fromRandom();
+            w.keyMeta = thredz.KeyPair.fromRandom();
+            w.keyFunding = thredz.KeyPair.fromRandom();
             w.writeWallet(useFile)
             console.info(`Created file ${useFile} with key for user ${w.user}`)
         } else {
@@ -105,7 +106,7 @@ export class Wallet {
             return Wallet.fromFile()
         }
         const jwallet = JSON.parse(walletContents)
-        const setkey = KeyPair.fromString(jwallet.keymeta || jwallet.key)
+        const setkey = thredz.KeyPair.fromString(jwallet.keymeta || jwallet.key)
         this.keyMeta = setkey
         let updateWallet = false
         
@@ -115,12 +116,12 @@ export class Wallet {
             updateWallet = true
         }
         if (!jwallet.keyfunding) {
-            jwallet.keyfunding = KeyPair.fromRandom().toString()
+            jwallet.keyfunding = thredz.KeyPair.fromRandom().toString()
             updateWallet = true
             console.log(`Created New Funding Key ${jwallet.keyfunding}`)
         }
         //console.log(jwallet)
-        this.keyFunding = KeyPair.fromString(jwallet.keyfunding)
+        this.keyFunding = thredz.KeyPair.fromString(jwallet.keyfunding)
 
         this.user = jwallet.user
         if (updateWallet) {

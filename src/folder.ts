@@ -1,8 +1,10 @@
 import * as fs from "fs"
 import * as fsextra from "fs-extra"
 import * as path from 'path'
-import { MetaNode, ThredzContainer } from "./models/meta";
-import { chunkSubstr } from "./utils";
+//import { MetaNode, ThredzContainer } from "thredz-lib/src/models/meta"
+import * as thredz from "thredz-lib"
+//const {MetaNode, ThredzContainer} = thredz.thredz
+//import { chunkSubstr } from "thredz-lib/src/utils"
 
 const commitsFileName = '.commits'
 const txFileNamePrefix = '.thredz.tx.'
@@ -14,7 +16,7 @@ export class Folder {
     // the curent user path
     currentPath = this.userRoot
     //TODO: rename currentParentNode
-    currentNode: MetaNode|null = null
+    currentNode: thredz.thredz.MetaNode|null = null
     get cwd() { return process.cwd() }
     getuserFolder() { 
         // console.log(`user folder`,`${this.userRoot}${this.user}`)
@@ -50,14 +52,14 @@ export class Folder {
     }
 
     // create a folder and associated metanode
-    mkdir(folderName?:string): ThredzContainer {
+    mkdir(folderName?:string): thredz.thredz.ThredzContainer {
         const folder = path.join(this.currentPath,folderName||'')
         //const folder = `${}${folderName ? '/'+folderName:''}`
         if (!fs.existsSync(folder)) console.log(`making`, folder)
         if (!fs.existsSync(folder)) fs.mkdirSync(folder)
         this.currentPath = folder
         //find or create node
-        const node = new ThredzContainer(folderName||this.user)
+        const node = new thredz.thredz.ThredzContainer(folderName||this.user)
         //TODO: write the node
         return node
     }
@@ -85,11 +87,11 @@ export class Folder {
         console.log(`current node`,this.currentNode?.transactionId)
     }
 
-    findCurrentNode(): MetaNode|null {
+    findCurrentNode(): thredz.thredz.MetaNode|null {
         const txns = this.getTransactionsInFolder(this.currentPath, txFileNamePrefix)
         const ourFolder = path.basename(this.currentPath)
         const ourNode = txns?.find(t => {return t.name === ourFolder})
-        const ourMeta = ourNode ? ThredzContainer.fromJson(ourNode) : null
+        const ourMeta = ourNode ? thredz.thredz.ThredzContainer.fromJson(ourNode) : null
         return ourMeta
     }
 
@@ -176,7 +178,7 @@ export class Folder {
         jnotsaved.forEach(e => {
             const snotsaved = JSON.stringify(e, undefined, 2)
             // might not need to chunk the string if each bpart is 10MB?
-            chunkSubstr(snotsaved,100000).forEach(c => {
+            thredz.utils.chunkSubstr(snotsaved,100000).forEach(c => {
                 writableStream.write(c)
             })
             writableStream.write(`,\n`)
@@ -229,7 +231,7 @@ export class Folder {
         }
     }
     //stage a step of a unit of work
-    stageWork(node: MetaNode): number|null {
+    stageWork(node: thredz.thredz.MetaNode): number|null {
         let jcurrent = []
         if (this.isPendingCommit()){
             const current = this.getfileContents(this.getcommitFileName())

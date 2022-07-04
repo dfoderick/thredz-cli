@@ -3,14 +3,15 @@ import { Wallet } from "./wallet";
 import { Folder } from "./folder"
 import OpenSPV from 'openspv';
 import * as fs from "fs-extra";
-import { BNode, MetaNode, ThredzContent } from "./models/meta";
+//import { BNode, MetaNode, ThredzContent } from "thredz-lib/src/models/meta";
+import * as thredz from "thredz-lib"
 import constants from "./constants";
 import { IndexingService, OutputCollection, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
 import {Wallet as msWallet, Script} from 'moneystream-wallet'
 import { WalletStorage } from "./walletstorage";
 import Long from "long";
 import { Indexer } from "./indexer";
-import { asHexBuffers } from "./utils";
+//import { asHexBuffers } from "thredz-lib/src/utils";
 
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
@@ -47,7 +48,7 @@ export class Uploader {
         const encContent: Buffer = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
         console.log(`content encrypted`, encContent.length)
         // node is thredz content
-        const node: ThredzContent = new ThredzContent(fileName)
+        const node: thredz.thredz.ThredzContent = new thredz.thredz.ThredzContent(fileName)
         node.parent = this.folder.currentNode
         //TODO: sort out derived key and metanet key
         node.derivedKey = this.wallet.keyMeta
@@ -112,7 +113,7 @@ export class Uploader {
 
     //create a transaction for the node, returns the updated node
     //navigate node children and build those nodes too
-    async createTransaction(node: MetaNode, msw?: msWallet, dochildren = true): Promise<MetaNode> {
+    async createTransaction(node: thredz.thredz.MetaNode, msw?: msWallet, dochildren = true): Promise<thredz.thredz.MetaNode> {
         //await this.wallet.getBalance()
         //TODO: make this work for recursive case!!!
         if (!msw) msw = this.getMoneyStreamWallet()
@@ -233,7 +234,7 @@ export class Uploader {
 
     // create a content node
     async createTextNode(filename: string, contents: string) {
-        const node = new BNode(filename)
+        const node = new thredz.thredz.BNode(filename)
         node.parent = this.folder.currentNode
         //TODO: encrypt or not?
         node.content = Buffer.from(contents)
@@ -241,7 +242,7 @@ export class Uploader {
         return built
     }
 
-    async buildAndStage(node:MetaNode) {
+    async buildAndStage(node: thredz.thredz.MetaNode) {
         //node.script = this.metaScript(node)
         await node.generateScript()
         const metanetNodeBuilt = await this.createTransaction(node)

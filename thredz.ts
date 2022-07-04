@@ -6,7 +6,8 @@ import { logGreen, startup } from './src/utils'
 
 import Vorpal from "@moleculer/vorpal";
 import { wrapTryCatch } from "./src/utils";
-import { MetaNode, ThredzContainer } from "./src/models/meta";
+//import { MetaNode, ThredzContainer } from "thredz-lib/src/models/meta";
+import * as thredz from "thredz-lib"
 import { p2p } from "./src/p2p";
 import { Indexer } from "./src/indexer";
 export const vorpal = new Vorpal();
@@ -58,7 +59,7 @@ vorpal
     .action(wrapTryCatch(async ({ name }: { name: string }) => {
         const alreadyExists = folder.createUser(name)
         if (!alreadyExists) {
-            const root: ThredzContainer = folder.mkdir()
+            const root: thredz.thredz.ThredzContainer = folder.mkdir()
             console.log(root)
             await root.generateScript()
             const metanetNodeBuilt = await uploader.createTransaction(root)

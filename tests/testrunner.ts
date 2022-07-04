@@ -1,4 +1,10 @@
 // run with ` npx ts-node tests/testrunner.ts`
+
+import * as thredz from "thredz-lib";
+console.log(`thz`, thredz)
+const {MetaNode, ThredzContainer} = thredz.thredz
+console.log(`thz`, MetaNode, ThredzContainer)
+
 import {Folder} from "../src/folder"
 import {Uploader} from "../src/uploader"
 import {Wallet} from "../src/wallet"

@@ -32,7 +32,8 @@
     "long": "^5.2.0",
     "moneystream-wallet": "^0.2.19",
     "node-fetch": "^3.2.5",
-    "openspv": "^3.0.29"
+    "openspv": "^3.0.29",
+    "thredz-lib": "^1.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",
