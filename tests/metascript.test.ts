@@ -1,16 +1,16 @@
 import * as thredz from "thredz-lib";
 console.log(`thz`, thredz)
-const {MetaNode, ThredzContainer} = thredz.thredz
+//const {MetaNode, ThredzContainer} = thredz.thredz
 import {Folder} from "../src/folder"
 import {Uploader} from "../src/uploader"
-import {Wallet} from "../src/wallet"
+import { Wallet } from '../src/wallet'
 
 test('generates a root script', async () => {
     const wallet = Wallet.fromRandom()
     const folder = new Folder()
     folder.user="dave"
     const uploader = new Uploader(wallet, folder)
-    const node = new ThredzContainer(folder.getuserFolder())
+    const node = new thredz.thredz.ThredzContainer(folder.getuserFolder())
     node.derivedKey = wallet.keyMeta
     expect(node.derivedKey).toBeDefined()
     await node.generateScript()

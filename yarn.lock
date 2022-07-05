@@ -7469,7 +7469,7 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
-thredz-lib@^1.0.7:
+thredz-lib@1.0.7:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/thredz-lib/-/thredz-lib-1.0.7.tgz#103d7e52c841f4439854ad6296992e3030fac5b7"
   integrity sha512-nIIQJjWv2FZWdMnOqFcRkNQfQC0AVDvw+200u1t13SnIiEAN48OLFLemz3edRayMBZ5x1IiQEBNN1/58BuQZug==

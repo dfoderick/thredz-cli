@@ -1,9 +1,9 @@
 //    "bsv": "git+https://github.com/moneystreamdev/bsv.git",
-import { Wallet } from "./wallet";
 import { Folder } from "./folder"
-import OpenSPV from 'openspv';
+//import OpenSPV from 'openspv';
 import * as fs from "fs-extra";
 //import { BNode, MetaNode, ThredzContent } from "thredz-lib/src/models/meta";
+import { Wallet } from "./wallet"
 import * as thredz from "thredz-lib"
 import constants from "./constants";
 import { IndexingService, OutputCollection, TransactionBuilder, UnspentOutput } from 'moneystream-wallet'
@@ -11,7 +11,6 @@ import {Wallet as msWallet, Script} from 'moneystream-wallet'
 import { WalletStorage } from "./walletstorage";
 import Long from "long";
 import { Indexer } from "./indexer";
-//import { asHexBuffers } from "thredz-lib/src/utils";
 
 const dipProtocolTag = '1D1PdbxVxcjfovTATC3ginxjj4enTgxLyY'
 const algorithm = 'SHA512'
@@ -19,8 +18,8 @@ const algorithm = 'SHA512'
 //TODO: its more than an uploader. Its a general node processor
 // create media and text nodes and other types of nodes
 export class Uploader {
-    private wallet:Wallet
-    private folder:Folder
+    private wallet: Wallet
+    private folder: Folder
     public fee:number = 100
     //use this to send transaction
     indexer: Indexer = new Indexer()
@@ -45,7 +44,9 @@ export class Uploader {
         if (!this.wallet.PublicKeyMeta) throw new Error(`Wallet must be loaded!`)
         //TODO: test encrypt and decrypt
         //console.log(`pubkey`, this.wallet.PublicKey)
-        const encContent: Buffer = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
+        //const encContent: Buffer = OpenSPV.Ecies.bitcoreEncrypt(content, this.wallet.PublicKeyMeta)
+        //TODO: fix this1
+        const encContent = Buffer.from(' ')
         console.log(`content encrypted`, encContent.length)
         // node is thredz content
         const node: thredz.thredz.ThredzContent = new thredz.thredz.ThredzContent(fileName)
@@ -134,7 +135,7 @@ export class Uploader {
         let buildResult = await msw.makeSimpleSpend(Long.fromNumber(0),undefined,payTo,fee)
         if (Math.abs(buildResult.feeActual - buildResult.feeExpected) > 10) {
             //unspend the wallet utxo that are on enumbered
-            msw.selectedUtxos.items.forEach(u => {
+            msw.selectedUtxos.items.forEach((u:any) => {
                 if (u.status==="hold") {
                     u.unencumber()
                     console.log(`UTXO MADE UNSPENT`)
@@ -166,7 +167,7 @@ export class Uploader {
             //msw.logDetailsLastTx()
             const changeUtxo = 1
             msw.spendUtxos(node.utxos, buildResult.tx, changeUtxo, node.transactionId)
-            msw.selectedUtxos.items.forEach(u => {
+            msw.selectedUtxos.items.forEach((u:any) => {
                 console.log(`utxo`, u)
             })
         }

@@ -156,35 +156,3 @@ export function startup() {
 //   return chunks
 // }
 
-// //splits a string into chunks
-// //TODO: efficient???
-// export function chunkSubstr(str:string, size:number): string[] {
-//   const numChunks = Math.ceil(str.length / size)
-//   const chunks = new Array(numChunks)
-
-//   for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
-//     chunks[i] = str.substr(o, size)
-//   }
-
-//   return chunks
-// }
-
-// // returns script data as array of hex buffers that Script wants
-// export function asHexBuffers(arr:any[]): Buffer[] {
-//   return arr.map((a: any) => {
-//       if (a instanceof Buffer) return a //Buffer.from(a.toString('hex'))
-//       if (typeof a === 'number') {
-//           if (a < 16 ) return Buffer.from(a.toString(16).padStart(2,'0'))
-//           throw Error(`FIX ASHEX ${a}`)
-//       }
-//       if (a === null) throw new Error(`METANET script element cannot be NULL`)
-//       return Buffer.from(a.toString('hex'))
-//   })
-// }
-
-// // returns script data as array of hex buffers that Script wants
-// export function asHexStrings(arr:Buffer[]): string[] {
-//   return arr.map((a: Buffer) => {
-//       return a.toString('hex')
-//   })
-// }

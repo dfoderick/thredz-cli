@@ -1,17 +1,28 @@
+import * as fs from "fs-extra"
 import {IStorage} from 'moneystream-wallet'
 
+// file backed storage
 export class WalletStorage implements IStorage {
+    _filename: string = ''
+    constructor(fileName?: string) {
+        this.setFileName(fileName||`./.thredz`)
+    }
     setFileName(filename: string): void {
-        throw new Error('Method not implemented.');
+        this._filename = filename
     }
     put(item: string): void {
-        throw new Error('Method not implemented.');
+        fs.writeFileSync(this._filename, item)
     }
     get(): string {
-        throw new Error('Method not implemented.');
-    }
+        const contents = fs.readFileSync(this._filename)
+        return contents.toString()    
+}
     tryget(): string | null {
-        throw new Error('Method not implemented.');
+        try {
+            const contents = fs.readFileSync(this._filename)
+            return contents.toString()    
+        } catch (err) {}
+        return null
     }
     backup(): void {
         throw new Error('Method not implemented.');

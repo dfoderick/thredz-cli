@@ -7,7 +7,7 @@
     "test": "rm -f jest.config.js && jest",
     "prepare": "cp ./src/hyperswarm.d.ts ./node_modules/hyperswarm/index.d.ts && cp ./src/vorpal.d.ts ./node_modules/@moleculer/vorpal/index.d.ts && cp ./src/openspv.d.ts ./node_modules/openspv/index.d.ts && tsc",
     "thredz": "npx ts-node thredz",
-    "start": "npx ts-node thredz",
+    "start": "npx ts-node -O '{\"module\": \"commonjs\"}' thredz",
     "build": "tsc"
   },
   "repository": {
@@ -33,7 +33,7 @@
     "moneystream-wallet": "^0.2.19",
     "node-fetch": "^3.2.5",
     "openspv": "^3.0.29",
-    "thredz-lib": "^1.0.7"
+    "thredz-lib": "1.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",

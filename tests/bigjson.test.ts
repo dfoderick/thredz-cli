@@ -1,13 +1,14 @@
+import * as thredz from 'thredz-lib'
 import {Folder} from "../src/folder"
 import {Uploader} from "../src/uploader"
-import {Wallet} from "../src/wallet"
+import { Wallet } from '../src/wallet'
 import * as fs from 'fs-extra'
 
 // file contents should fit into one content transaction
 test('write big json', async () => {
   const jwallet = fs.readJSONSync('./.thredz')
   jwallet.name = 'test'
-  const wallet = Wallet.load(JSON.stringify(jwallet))
+  const wallet = Wallet.load(/*undefined, */JSON.stringify(jwallet))
   const folder = new Folder()
   folder.user = wallet.user
   const uploader = new Uploader(wallet, folder)

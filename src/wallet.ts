@@ -1,3 +1,4 @@
+//TODO: was moved to lib. This should be removed
 import OpenSPV from 'openspv';
 //import { KeyPair } from "thredz-lib/src/key";
 import * as thredz from 'thredz-lib'

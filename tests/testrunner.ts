@@ -13,7 +13,7 @@ import * as fs from 'fs-extra'
 ; ( async () => {
     const jwallet = fs.readJSONSync('./.thredz')
     jwallet.user = 'test'
-    const wallet = Wallet.load(JSON.stringify(jwallet))
+    const wallet = Wallet.load(/*undefined,*/ JSON.stringify(jwallet))
     const folder = new Folder()
     folder.user = wallet.user
     folder.cd(folder.user)
